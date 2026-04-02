@@ -11,6 +11,21 @@ const STEPS = {
   RESULT: 'result',
 };
 
+function Field({ id, label, type = 'text', form, setFn, ...rest }) {
+  const value = form[id];
+  const onChange = setFn(id);
+  return (
+    <div className="form-group">
+      <label htmlFor={id}>{label}</label>
+      {type === 'checkbox' ? (
+        <input id={id} type="checkbox" checked={value} onChange={onChange} {...rest} />
+      ) : (
+        <input id={id} type={type} value={value} onChange={onChange} {...rest} />
+      )}
+    </div>
+  );
+}
+
 const DEFAULTS = {
   apiKey: '',
   clientVersion: '0.19',
@@ -184,17 +199,6 @@ export default function App() {
     setError(null);
   };
 
-  const Field = ({ id, label, type = 'text', ...rest }) => (
-    <div className="form-group">
-      <label htmlFor={id}>{label}</label>
-      {type === 'checkbox' ? (
-        <input id={id} type="checkbox" checked={form[id]} onChange={set(id)} {...rest} />
-      ) : (
-        <input id={id} type={type} value={form[id]} onChange={set(id)} {...rest} />
-      )}
-    </div>
-  );
-
   return (
     <div className="app">
       <header className="app-header">
@@ -226,12 +230,12 @@ export default function App() {
               <fieldset className="section">
                 <legend>Session Parameters</legend>
                 <div className="form-row">
-                  <Field id="clientVersion" label="Client Version" />
-                  <Field id="country" label="Country" />
-                  <Field id="locale" label="Locale" />
+                  <Field form={form} setFn={set} id="clientVersion" label="Client Version" />
+                  <Field form={form} setFn={set} id="country" label="Country" />
+                  <Field form={form} setFn={set} id="locale" label="Locale" />
                 </div>
-                <Field id="allowedCardNetworks" label="Allowed Card Networks (comma-separated)" />
-                <Field id="allowedPaymentTypes" label="Allowed Payment Types (comma-separated)" />
+                <Field form={form} setFn={set} id="allowedCardNetworks" label="Allowed Card Networks (comma-separated)" />
+                <Field form={form} setFn={set} id="allowedPaymentTypes" label="Allowed Payment Types (comma-separated)" />
               </fieldset>
 
               {/* Capture Mandate */}
@@ -246,7 +250,7 @@ export default function App() {
                       <option value="NONE">NONE</option>
                     </select>
                   </div>
-                  <Field id="shipToCountries" label="Ship To Countries" />
+                  <Field form={form} setFn={set} id="shipToCountries" label="Ship To Countries" />
                 </div>
                 <div className="checkbox-row">
                   <label><input type="checkbox" checked={form.requestEmail} onChange={set('requestEmail')} /> Request Email</label>
@@ -260,7 +264,7 @@ export default function App() {
               <fieldset className="section">
                 <legend>Order Information</legend>
                 <div className="form-row">
-                  <Field id="totalAmount" label="Total Amount" />
+                  <Field form={form} setFn={set} id="totalAmount" label="Total Amount" />
                   <div className="form-group">
                     <label htmlFor="currency">Currency</label>
                     <select id="currency" value={form.currency} onChange={set('currency')}>
@@ -285,29 +289,29 @@ export default function App() {
                 {showBilling && (
                   <div className="section-body">
                     <div className="form-row">
-                      <Field id="billFirstName" label="First Name" />
-                      <Field id="billMiddleName" label="Middle Name" />
-                      <Field id="billLastName" label="Last Name" />
+                      <Field form={form} setFn={set} id="billFirstName" label="First Name" />
+                      <Field form={form} setFn={set} id="billMiddleName" label="Middle Name" />
+                      <Field form={form} setFn={set} id="billLastName" label="Last Name" />
                     </div>
                     <div className="form-row">
-                      <Field id="billTitle" label="Title" />
-                      <Field id="billNameSuffix" label="Suffix" />
+                      <Field form={form} setFn={set} id="billTitle" label="Title" />
+                      <Field form={form} setFn={set} id="billNameSuffix" label="Suffix" />
                     </div>
-                    <Field id="billAddress1" label="Address" />
+                    <Field form={form} setFn={set} id="billAddress1" label="Address" />
                     <div className="form-row">
-                      <Field id="billBuildingNumber" label="Building #" />
-                      <Field id="billDistrict" label="District" />
-                    </div>
-                    <div className="form-row">
-                      <Field id="billLocality" label="City" />
-                      <Field id="billAdministrativeArea" label="State" />
-                      <Field id="billPostalCode" label="Postal Code" />
-                      <Field id="billCountry" label="Country" />
+                      <Field form={form} setFn={set} id="billBuildingNumber" label="Building #" />
+                      <Field form={form} setFn={set} id="billDistrict" label="District" />
                     </div>
                     <div className="form-row">
-                      <Field id="billEmail" label="Email" type="email" />
-                      <Field id="billPhoneNumber" label="Phone" />
-                      <Field id="billPhoneType" label="Phone Type" />
+                      <Field form={form} setFn={set} id="billLocality" label="City" />
+                      <Field form={form} setFn={set} id="billAdministrativeArea" label="State" />
+                      <Field form={form} setFn={set} id="billPostalCode" label="Postal Code" />
+                      <Field form={form} setFn={set} id="billCountry" label="Country" />
+                    </div>
+                    <div className="form-row">
+                      <Field form={form} setFn={set} id="billEmail" label="Email" type="email" />
+                      <Field form={form} setFn={set} id="billPhoneNumber" label="Phone" />
+                      <Field form={form} setFn={set} id="billPhoneType" label="Phone Type" />
                     </div>
                   </div>
                 )}
@@ -323,19 +327,19 @@ export default function App() {
                 {showShipping && (
                   <div className="section-body">
                     <div className="form-row">
-                      <Field id="shipFirstName" label="First Name" />
-                      <Field id="shipLastName" label="Last Name" />
+                      <Field form={form} setFn={set} id="shipFirstName" label="First Name" />
+                      <Field form={form} setFn={set} id="shipLastName" label="Last Name" />
                     </div>
-                    <Field id="shipAddress1" label="Address" />
+                    <Field form={form} setFn={set} id="shipAddress1" label="Address" />
                     <div className="form-row">
-                      <Field id="shipBuildingNumber" label="Building #" />
-                      <Field id="shipDistrict" label="District" />
+                      <Field form={form} setFn={set} id="shipBuildingNumber" label="Building #" />
+                      <Field form={form} setFn={set} id="shipDistrict" label="District" />
                     </div>
                     <div className="form-row">
-                      <Field id="shipLocality" label="City" />
-                      <Field id="shipAdministrativeArea" label="State" />
-                      <Field id="shipPostalCode" label="Postal Code" />
-                      <Field id="shipCountry" label="Country" />
+                      <Field form={form} setFn={set} id="shipLocality" label="City" />
+                      <Field form={form} setFn={set} id="shipAdministrativeArea" label="State" />
+                      <Field form={form} setFn={set} id="shipPostalCode" label="Postal Code" />
+                      <Field form={form} setFn={set} id="shipCountry" label="Country" />
                     </div>
                   </div>
                 )}

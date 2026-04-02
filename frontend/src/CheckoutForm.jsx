@@ -65,6 +65,8 @@ export default function CheckoutForm({ captureContext, clientLibrary, clientLibr
         if (cancelled) return;
         upRef.current = up;
 
+        setLoading(false);
+
         // show() renders the payment UI and resolves with the transient token
         // Both containers must be visible in the DOM before calling show()
         // In embedded mode (sidebar=false), show() returns the final response directly
@@ -74,8 +76,6 @@ export default function CheckoutForm({ captureContext, clientLibrary, clientLibr
             paymentScreen: '#uc-payment-form',
           },
         });
-
-        setLoading(false);
 
         if (!cancelled) {
           onToken?.(response);
