@@ -102,7 +102,12 @@ for (const merchant of merchants) {
     role_id: adminRole.id,
     key_prefix: prefix,
     key_hash: keyHash,
-    allowed_origins: ['https://localhost:8181', 'https://localhost:3000', 'https://localhost:5173'],
+    allowed_origins: [
+      'https://localhost:8181',
+      'https://localhost:3000',
+      'https://localhost:5173',
+      'https://localhost:8443',
+    ],
     ip_whitelist: [],
     is_active: true,
     expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),

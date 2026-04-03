@@ -45,6 +45,6 @@ COPY --from=builder /app/apps/frontend/dist /usr/share/nginx/html
 # Replace default nginx config with our proxy config
 COPY apps/frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 80 443
+EXPOSE 80 8443
 
 CMD ["nginx", "-g", "daemon off;"]
