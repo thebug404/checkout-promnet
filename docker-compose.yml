@@ -7,7 +7,7 @@ services:
       - "3000:3000"
     environment:
       PORT: "3000"
-      NODE_ENV: "production"
+      NODE_ENV: "development"
     volumes:
       # Persist JSON data store across container restarts
       - api-data:/app/data

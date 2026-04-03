@@ -14,6 +14,10 @@ COPY src/ ./src/
 # Copy file-based JSON data store
 COPY data/ ./data/
 
+# Copy and prepare entrypoint script
+COPY entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
+
 EXPOSE 3000
 
-CMD ["npm", "start"]
+ENTRYPOINT ["./entrypoint.sh"]
