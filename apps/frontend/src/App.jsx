@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import CheckoutForm from './CheckoutForm';
+import CheckoutWC from './CheckoutWC';
 import PaymentResult from './PaymentResult';
 import { createSession, processPayment } from './api';
 import './App.css';
@@ -362,7 +362,7 @@ export default function App() {
               Session: <code>{sessionData.id}</code>
             </p>
 
-            <CheckoutForm
+            <CheckoutWC
               captureContext={sessionData.capture_context}
               clientLibrary={sessionData.client_library}
               clientLibraryIntegrity={sessionData.client_library_integrity}
