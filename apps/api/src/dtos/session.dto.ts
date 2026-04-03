@@ -197,7 +197,7 @@ export class CreateSessionDto {
   @IsArray({ message: 'targetOrigins must be an array' })
   @ArrayNotEmpty({ message: 'targetOrigins is required and must be a non-empty array of URLs' })
   @IsUrl(
-    { require_tld: environments.ENV === 'production' },
+    { require_tld: environments.NODE_ENV === 'production' },
     { each: true, message: 'Each entry in targetOrigins must be a valid URL' }
   )
   targetOrigins!: string[];
