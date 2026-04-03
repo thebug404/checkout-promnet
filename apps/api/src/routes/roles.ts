@@ -18,9 +18,9 @@ roles.get('/:id', requirePermission('merchants', 'read'), (c) => {
     return c.json({ error: 'Role not found' }, 404);
   }
 
-  const rolePermissions = store.findMany('role_permissions', (rp) => rp.role_id === id);
-  const permissionIds = rolePermissions.map((rp) => rp.permission_id);
-  const permissions = store.findAll('permissions').filter((p) => permissionIds.includes(p.id));
+  const rolePermissions = store.findMany('role_permissions', (rp: Record<string, unknown>) => rp['role_id'] === id) as Record<string, unknown>[];
+  const permissionIds = rolePermissions.map((rp) => rp['permission_id']);
+  const permissions = (store.findAll('permissions') as Record<string, unknown>[]).filter((p) => permissionIds.includes(p['id']));
 
   return c.json({ data: { ...role, permissions } });
 });

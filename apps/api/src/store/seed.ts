@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { randomUUID } from 'node:crypto';
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';

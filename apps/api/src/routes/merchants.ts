@@ -2,6 +2,8 @@ import { Hono } from 'hono';
 import { randomUUID } from 'node:crypto';
 import * as store from '../store/index.js';
 import { requirePermission } from '../middleware/auth.js';
+import { validateDto } from '../utils/validate.js';
+import { CreateMerchantDto, UpdateMerchantDto } from '../dtos/merchant.dto.js';
 
 const merchants = new Hono();
 
@@ -24,21 +26,24 @@ merchants.get('/:id', requirePermission('merchants', 'read'), (c) => {
 merchants.post('/', requirePermission('merchants', 'create'), async (c) => {
   const body = await c.req.json();
 
-  if (!body.name || !body.ruc || !body.country_code) {
-    return c.json({ error: 'name, ruc, and country_code are required' }, 400);
+  const errors = await validateDto(CreateMerchantDto, body);
+  if (errors) {
+    return c.json({ error: 'Validation failed', details: errors }, 400);
   }
 
+  const dto = body as CreateMerchantDto;
+
   // Check duplicate RUC
-  const existing = store.findOne('merchants', (m) => m.ruc === body.ruc);
+  const existing = store.findOne('merchants', (m: Record<string, unknown>) => m['ruc'] === dto.ruc);
   if (existing) {
     return c.json({ error: 'Merchant with this RUC already exists' }, 409);
   }
 
   const merchant = {
     id: randomUUID(),
-    name: body.name,
-    ruc: body.ruc,
-    country_code: body.country_code,
+    name: dto.name,
+    ruc: dto.ruc,
+    country_code: dto.country_code,
     status: 'active',
     created_at: new Date().toISOString(),
   };
@@ -52,10 +57,16 @@ merchants.patch('/:id', requirePermission('merchants', 'update'), async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json();
 
-  const allowed = ['name', 'ruc', 'country_code', 'status'];
-  const updates = {};
+  const errors = await validateDto(UpdateMerchantDto, body);
+  if (errors) {
+    return c.json({ error: 'Validation failed', details: errors }, 400);
+  }
+
+  const dto = body as UpdateMerchantDto;
+  const allowed: (keyof UpdateMerchantDto)[] = ['name', 'ruc', 'country_code', 'status'];
+  const updates: Partial<UpdateMerchantDto> = {};
   for (const key of allowed) {
-    if (body[key] !== undefined) updates[key] = body[key];
+    if (dto[key] !== undefined) updates[key] = dto[key];
   }
 
   const updated = store.update('merchants', id, updates);
@@ -76,3 +87,4 @@ merchants.delete('/:id', requirePermission('merchants', 'delete'), (c) => {
 });
 
 export default merchants;
+

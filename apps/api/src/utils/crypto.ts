@@ -17,7 +17,7 @@ export function generateApiKey() {
 /**
  * Parse an API key string into its components.
  */
-export function parseApiKey(raw) {
+export function parseApiKey(raw: string) {
   const parts = raw.split('_');
   // Format: puc_live_<prefix8>_<rest>
   if (parts.length !== 4 || parts[0] !== 'puc' || parts[1] !== 'live') {
@@ -32,7 +32,7 @@ export function parseApiKey(raw) {
 /**
  * Hash an API key using SHA-256. In production you'd use Argon2id.
  */
-export function hashApiKey(raw) {
+export function hashApiKey(raw: string) {
   const parsed = parseApiKey(raw);
   if (!parsed) return null;
   return createHash('sha256').update(parsed.secret).digest('hex');
@@ -41,7 +41,7 @@ export function hashApiKey(raw) {
 /**
  * Verify an API key against a stored hash.
  */
-export function verifyApiKey(raw, storedHash) {
+export function verifyApiKey(raw: string, storedHash: string) {
   const hash = hashApiKey(raw);
   if (!hash) return false;
   const a = Buffer.from(hash, 'hex');
@@ -53,6 +53,6 @@ export function verifyApiKey(raw, storedHash) {
 /**
  * Sign a payload using HMAC-SHA256 (for webhook callbacks).
  */
-export function signPayload(payload, secret) {
+export function signPayload(payload: unknown, secret: string) {
   return createHmac('sha256', secret).update(JSON.stringify(payload)).digest('hex');
 }

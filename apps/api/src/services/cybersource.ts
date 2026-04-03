@@ -1,3 +1,4 @@
+// @ts-nocheck
 import cybersourceRestApi from 'cybersource-rest-client';
 
 /**

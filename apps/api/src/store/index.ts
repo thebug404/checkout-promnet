@@ -9,11 +9,11 @@ if (!existsSync(DATA_DIR)) {
   mkdirSync(DATA_DIR, { recursive: true });
 }
 
-function getFilePath(collection) {
+function getFilePath(collection: string) {
   return join(DATA_DIR, `${collection}.json`);
 }
 
-function readCollection(collection) {
+function readCollection(collection: string): Record<string, unknown>[] {
   const filePath = getFilePath(collection);
   if (!existsSync(filePath)) {
     writeFileSync(filePath, '[]', 'utf-8');
@@ -22,45 +22,45 @@ function readCollection(collection) {
   return JSON.parse(readFileSync(filePath, 'utf-8'));
 }
 
-function writeCollection(collection, data) {
+function writeCollection(collection: string, data: unknown[]) {
   writeFileSync(getFilePath(collection), JSON.stringify(data, null, 2), 'utf-8');
 }
 
-export function findAll(collection) {
+export function findAll(collection: string) {
   return readCollection(collection);
 }
 
-export function findById(collection, id) {
-  return readCollection(collection).find((item) => item.id === id) || null;
+export function findById(collection: string, id: string) {
+  return readCollection(collection).find((item) => item['id'] === id) ?? null;
 }
 
-export function findOne(collection, predicate) {
-  return readCollection(collection).find(predicate) || null;
+export function findOne(collection: string, predicate: (item: Record<string, unknown>) => boolean) {
+  return readCollection(collection).find(predicate) ?? null;
 }
 
-export function findMany(collection, predicate) {
+export function findMany(collection: string, predicate: (item: Record<string, unknown>) => boolean) {
   return readCollection(collection).filter(predicate);
 }
 
-export function create(collection, item) {
+export function create(collection: string, item: Record<string, unknown>) {
   const data = readCollection(collection);
   data.push(item);
   writeCollection(collection, data);
   return item;
 }
 
-export function update(collection, id, updates) {
+export function update(collection: string, id: string, updates: Record<string, unknown>) {
   const data = readCollection(collection);
-  const index = data.findIndex((item) => item.id === id);
+  const index = data.findIndex((item) => item['id'] === id);
   if (index === -1) return null;
   data[index] = { ...data[index], ...updates };
   writeCollection(collection, data);
   return data[index];
 }
 
-export function remove(collection, id) {
+export function remove(collection: string, id: string) {
   const data = readCollection(collection);
-  const index = data.findIndex((item) => item.id === id);
+  const index = data.findIndex((item) => item['id'] === id);
   if (index === -1) return false;
   data.splice(index, 1);
   writeCollection(collection, data);
