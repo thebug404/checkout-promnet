@@ -101,7 +101,7 @@ export default function App() {
     try {
       const origin = window.location.origin;
       const payload = {
-        targetOrigins: ["https://localhost:5173"],
+        targetOrigins: [origin],
         clientVersion: form.clientVersion,
         allowedCardNetworks: form.allowedCardNetworks.split(',').map((s) => s.trim()).filter(Boolean),
         allowedPaymentTypes: form.allowedPaymentTypes.split(',').map((s) => s.trim()).filter(Boolean),
