@@ -7,7 +7,9 @@
   "scripts": {
     "start": "tsx src/index.ts",
     "dev": "tsx watch src/index.ts",
-    "seed": "tsx src/store/seed.ts"
+    "seed": "tsx src/database/seed.ts",
+    "migration:generate": "typeorm-ts-node-commonjs migration:generate -d src/database/data-source.ts",
+    "migration:run": "typeorm-ts-node-commonjs migration:run -d src/database/data-source.ts"
   },
   "keywords": [],
   "author": {
@@ -21,7 +23,9 @@
     "class-validator": "0.14.1",
     "cybersource-rest-client": "0.0.76",
     "hono": "4.12.9",
+    "pg": "8.13.1",
     "reflect-metadata": "0.2.2",
+    "typeorm": "0.3.21",
     "uuid": "13.0.0"
   },
   "devDependencies": {

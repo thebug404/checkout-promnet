@@ -4,15 +4,16 @@ import { serve } from '@hono/node-server';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 
+import { AppDataSource } from './database/data-source.js';
 import { authMiddleware } from './middleware/auth.js';
 import { auditMiddleware } from './middleware/audit.js';
 
-import merchants from './routes/merchants.js';
-import apiKeys from './routes/api-keys.js';
-import roles from './routes/roles.js';
-import pspCredentials from './routes/psp-credentials.js';
-import sessions from './routes/sessions.js';
-import auditLogs from './routes/audit-logs.js';
+import merchantRoutes from './modules/merchants/merchant.routes.js';
+import apiKeyRoutes from './modules/api-keys/api-key.routes.js';
+import roleRoutes from './modules/roles/role.routes.js';
+import pspCredentialRoutes from './modules/psp-credentials/psp-credential.routes.js';
+import sessionRoutes from './modules/sessions/session.routes.js';
+import auditLogRoutes from './modules/audit-logs/audit-log.routes.js';
 
 const app = new Hono();
 
@@ -30,12 +31,12 @@ const api = new Hono();
 api.use('*', authMiddleware());
 api.use('*', auditMiddleware());
 
-api.route('/merchants', merchants);
-api.route('/api-keys', apiKeys);
-api.route('/roles', roles);
-api.route('/psp-credentials', pspCredentials);
-api.route('/sessions', sessions);
-api.route('/audit-logs', auditLogs);
+api.route('/merchants', merchantRoutes);
+api.route('/api-keys', apiKeyRoutes);
+api.route('/roles', roleRoutes);
+api.route('/psp-credentials', pspCredentialRoutes);
+api.route('/sessions', sessionRoutes);
+api.route('/audit-logs', auditLogRoutes);
 
 app.route('/v1', api);
 
@@ -55,9 +56,19 @@ app.notFound((c) => {
 
 const port = parseInt(process.env.PORT || '3000', 10);
 
-serve({ fetch: app.fetch, port }, (info) => {
-  console.log(`\n🚀 PUC API running on http://localhost:${info.port}`);
-  console.log(`   Health: http://localhost:${info.port}/health\n`);
-});
+// Initialize database then start server
+AppDataSource.initialize()
+  .then(() => {
+    console.log('📦 Database connected successfully');
+
+    serve({ fetch: app.fetch, port }, (info) => {
+      console.log(`\n🚀 PUC API running on http://localhost:${info.port}`);
+      console.log(`   Health: http://localhost:${info.port}/health\n`);
+    });
+  })
+  .catch((error) => {
+    console.error('❌ Database connection failed:', error);
+    process.exit(1);
+  });
 
 export default app;

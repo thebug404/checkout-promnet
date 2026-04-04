@@ -1,4 +1,21 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-checkout_promnet}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   api:
     build:
       context: ./apps/api
@@ -8,12 +25,17 @@ services:
     environment:
       PORT: 3000
       NODE_ENV: ${NODE_ENV:-production}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-checkout_promnet}
       CYBERSOURCE_MERCHANT_ID: ${CYBERSOURCE_MERCHANT_ID}
       CYBERSOURCE_KEY_ID: ${CYBERSOURCE_KEY_ID}
       CYBERSOURCE_SECRET_KEY: ${CYBERSOURCE_SECRET_KEY}
-    volumes:
-      # Persist JSON data store across container restarts
-      - api-data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
@@ -36,4 +58,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  api-data:
+  postgres-data:

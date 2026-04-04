@@ -1,0 +1,50 @@
+import type { Context } from 'hono';
+import { PspCredentialService } from './psp-credential.service.js';
+import { CreatePspCredentialDto, UpdatePspCredentialDto } from './psp-credential.dto.js';
+import { validateDto } from '../../shared/utils/validate.js';
+
+const pspCredentialService = new PspCredentialService();
+
+export class PspCredentialController {
+  static async findAll(c: Context) {
+    const merchant = c.get('merchant' as never) as { id: string };
+    const creds = await pspCredentialService.findByMerchant(merchant.id);
+    const safe = creds.map(({ cybersource_secret_key, ...rest }) => ({
+      ...rest,
+      cybersource_secret_key: cybersource_secret_key ? '***' : null,
+    }));
+    return c.json({ data: safe });
+  }
+
+  static async create(c: Context) {
+    const merchant = c.get('merchant' as never) as { id: string };
+    const body = await c.req.json();
+
+    const errors = await validateDto(CreatePspCredentialDto, body);
+    if (errors) {
+      return c.json({ error: 'Validation failed', details: errors }, 400);
+    }
+
+    const credential = await pspCredentialService.create(body as CreatePspCredentialDto, merchant.id);
+    const { cybersource_secret_key, ...safe } = credential;
+    return c.json({ data: { ...safe, cybersource_secret_key: cybersource_secret_key ? '***' : null } }, 201);
+  }
+
+  static async update(c: Context) {
+    const merchant = c.get('merchant' as never) as { id: string };
+    const body = await c.req.json();
+
+    const errors = await validateDto(UpdatePspCredentialDto, body);
+    if (errors) {
+      return c.json({ error: 'Validation failed', details: errors }, 400);
+    }
+
+    const updated = await pspCredentialService.update(c.req.param('id')!, merchant.id, body as UpdatePspCredentialDto);
+    if (!updated) {
+      return c.json({ error: 'PSP credential not found' }, 404);
+    }
+
+    const { cybersource_secret_key, ...safe } = updated;
+    return c.json({ data: { ...safe, cybersource_secret_key: cybersource_secret_key ? '***' : null } });
+  }
+}

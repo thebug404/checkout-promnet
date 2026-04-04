@@ -1,6 +1,8 @@
 import type { MiddlewareHandler } from 'hono';
-import { parseApiKey, verifyApiKey } from '../utils/crypto.js';
-import * as store from '../store/index.js';
+import { parseApiKey, verifyApiKey } from '../shared/utils/crypto.js';
+import { ApiKeyService } from '../modules/api-keys/api-key.service.js';
+
+const apiKeyService = new ApiKeyService();
 
 /**
  * API Key authentication middleware.
@@ -20,33 +22,32 @@ export function authMiddleware(): MiddlewareHandler {
       return c.json({ error: 'Invalid API key format' }, 401);
     }
 
-    // Lookup by prefix
-    const apiKey = store.findOne('api_keys', (k: Record<string, unknown>) => k['key_prefix'] === parsed.prefix) as Record<string, unknown> | null;
+    // Lookup by prefix with relations
+    const apiKey = await apiKeyService.findByPrefixWithRelations(parsed.prefix);
     if (!apiKey) {
       return c.json({ error: 'Invalid API key' }, 401);
     }
 
     // Verify hash
-    if (!verifyApiKey(rawKey, apiKey['key_hash'] as string)) {
+    if (!verifyApiKey(rawKey, apiKey.key_hash)) {
       return c.json({ error: 'Invalid API key' }, 401);
     }
 
     // Check active
-    if (!apiKey['is_active']) {
+    if (!apiKey.is_active) {
       return c.json({ error: 'API key is revoked' }, 403);
     }
 
     // Check expiry
-    if (apiKey['expires_at'] && new Date(apiKey['expires_at'] as string) < new Date()) {
+    if (apiKey.expires_at && new Date(apiKey.expires_at) < new Date()) {
       return c.json({ error: 'API key has expired' }, 403);
     }
 
     // Check origin
     const origin = c.req.header('Origin');
-
     console.log('API key origin:', origin);
 
-    const allowedOrigins = (apiKey['allowed_origins'] as string[]) ?? [];
+    const allowedOrigins = apiKey.allowed_origins ?? [];
     if (origin && allowedOrigins.length > 0) {
       console.log('Allowed origins:', allowedOrigins);
       if (!allowedOrigins.includes(origin)) {
@@ -55,7 +56,7 @@ export function authMiddleware(): MiddlewareHandler {
     }
 
     // Check IP whitelist
-    const ipWhitelist = (apiKey['ip_whitelist'] as string[]) ?? [];
+    const ipWhitelist = apiKey.ip_whitelist ?? [];
     if (ipWhitelist.length > 0) {
       const clientIp = c.req.header('X-Forwarded-For')?.split(',')[0]?.trim() ||
         c.req.header('X-Real-IP') ||
@@ -65,25 +66,22 @@ export function authMiddleware(): MiddlewareHandler {
       }
     }
 
-    // Resolve role & permissions
-    const role = store.findById('roles', apiKey['role_id'] as string);
-    const rolePermissions = store.findMany('role_permissions', (rp: Record<string, unknown>) => rp['role_id'] === apiKey['role_id']) as Record<string, unknown>[];
-    const permissionIds = rolePermissions.map((rp) => rp['permission_id']);
-    const permissions = (store.findAll('permissions') as Record<string, unknown>[]).filter((p) => permissionIds.includes(p['id']));
-
-    // Resolve merchant
-    const merchant = store.findById('merchants', apiKey['merchant_id'] as string) as Record<string, unknown> | null;
-    if (!merchant || merchant['status'] !== 'active') {
+    // Merchant check (loaded via relation)
+    const merchant = apiKey.merchant;
+    if (!merchant || merchant.status !== 'active') {
       return c.json({ error: 'Merchant is not active' }, 403);
     }
 
     // Update last_used_at
-    store.update('api_keys', apiKey['id'] as string, { last_used_at: new Date().toISOString() });
+    await apiKeyService.updateLastUsed(apiKey.id);
+
+    // Role & permissions are loaded via eager relation on RoleEntity
+    const permissions = apiKey.role?.permissions ?? [];
 
     // Set auth context
     c.set('apiKey', apiKey as never);
     c.set('merchant', merchant as never);
-    c.set('role', role as never);
+    c.set('role', apiKey.role as never);
     c.set('permissions', permissions as never);
 
     await next();
@@ -92,13 +90,11 @@ export function authMiddleware(): MiddlewareHandler {
 
 /**
  * Permission check middleware. Use after authMiddleware().
- * @param {string} resource - e.g. 'sessions'
- * @param {string} action - e.g. 'create'
  */
 export function requirePermission(resource: string, action: string): MiddlewareHandler {
   return async (c, next) => {
-    const permissions = (c.get('permissions' as never) as Record<string, unknown>[] | undefined) ?? [];
-    const has = permissions.some((p) => p['resource'] === resource && p['action'] === action);
+    const permissions = (c.get('permissions' as never) as Array<{ resource: string; action: string }> | undefined) ?? [];
+    const has = permissions.some((p) => p.resource === resource && p.action === action);
     if (!has) {
       return c.json({ error: `Forbidden: requires ${resource}:${action}` }, 403);
     }
