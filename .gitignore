@@ -1,4 +1,7 @@
 node_modules/
 data/
+dist/
+build/
 .turbo
 .env
+.react-router/
