@@ -1,16 +1,53 @@
-// @ts-nocheck
 import cybersourceRestApi from 'cybersource-rest-client';
+import type { PspCredentialEntity } from '../../modules/psp-credentials/psp-credential.entity.js';
 
-/**
- * Build a CyberSource configuration object from PSP credentials.
- */
-function buildConfig(pspCredential) {
+export interface CaptureContextResult {
+  captureContext: string;
+  decodedData: Record<string, unknown>;
+}
+
+interface BillToInfo {
+  firstName?: string;
+  lastName?: string;
+  address1?: string;
+  locality?: string;
+  administrativeArea?: string;
+  postalCode?: string;
+  country?: string;
+  email?: string;
+  phoneNumber?: string;
+}
+
+export interface PaymentOrderInformation {
+  amountDetails: {
+    totalAmount: string;
+    currency: string;
+  };
+  billTo?: BillToInfo;
+}
+
+export interface CybersourcePaymentRequest {
+  transientToken: string;
+  referenceCode?: string;
+  orderInformation: PaymentOrderInformation;
+}
+
+export interface CybersourcePaymentResult {
+  id: string;
+  status: string;
+  reconciliationId: string;
+  clientReferenceInformation: Record<string, unknown>;
+  orderInformation: Record<string, unknown>;
+  processorInformation: Record<string, unknown>;
+}
+
+function buildConfig(pspCredential: PspCredentialEntity) {
   return {
     authenticationType: 'http_signature',
     runEnvironment: 'apitest.cybersource.com',
-    merchantID: pspCredential.cybersource_merchant_id,
-    merchantKeyId: pspCredential.cybersource_key_id,
-    merchantsecretKey: pspCredential.cybersource_secret_key,
+    merchantID: pspCredential.cybersource_merchant_id!,
+    merchantKeyId: pspCredential.cybersource_key_id!,
+    merchantsecretKey: pspCredential.cybersource_secret_key!,
     logConfiguration: {
       enableLog: false,
     },
@@ -21,13 +58,16 @@ function buildConfig(pspCredential) {
  * Generate a Unified Checkout Capture Context (session) via CyberSource API.
  * Returns a JWT capture context string.
  */
-export function generateCaptureContext(pspCredential, requestPayload) {
-  return new Promise((resolve, reject) => {
+export function generateCaptureContext(
+  pspCredential: PspCredentialEntity,
+  requestPayload: Record<string, unknown>,
+): Promise<CaptureContextResult> {
+  return new Promise<CaptureContextResult>((resolve, reject) => {
     const configObject = buildConfig(pspCredential);
     const apiClient = new cybersourceRestApi.ApiClient();
     const instance = new cybersourceRestApi.UnifiedCheckoutCaptureContextApi(configObject, apiClient);
 
-    instance.generateUnifiedCheckoutCaptureContext(requestPayload, (error, data, response) => {
+    instance.generateUnifiedCheckoutCaptureContext(requestPayload, (error, data, _response) => {
       if (error) {
         const message = error.response?.text || JSON.stringify(error);
         reject(new Error(`CyberSource capture context error: ${message}`));
@@ -41,10 +81,11 @@ export function generateCaptureContext(pspCredential, requestPayload) {
 
       try {
         const parts = data.split('.');
-        const decodedData = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+        const decodedData = JSON.parse(Buffer.from(parts[1], 'base64').toString()) as Record<string, unknown>;
         resolve({ captureContext: data, decodedData });
       } catch (err) {
-        reject(new Error(`Failed to decode capture context JWT: ${err.message}`));
+        const parseError = err as Error;
+        reject(new Error(`Failed to decode capture context JWT: ${parseError.message}`));
       }
     });
   });
@@ -53,8 +94,11 @@ export function generateCaptureContext(pspCredential, requestPayload) {
 /**
  * Process a payment using a transient token from Unified Checkout.
  */
-export function processPayment(pspCredential, paymentRequest) {
-  return new Promise((resolve, reject) => {
+export function processPayment(
+  pspCredential: PspCredentialEntity,
+  paymentRequest: CybersourcePaymentRequest,
+): Promise<CybersourcePaymentResult> {
+  return new Promise<CybersourcePaymentResult>((resolve, reject) => {
     const configObject = buildConfig(pspCredential);
     const apiClient = new cybersourceRestApi.ApiClient();
     const instance = new cybersourceRestApi.PaymentsApi(configObject, apiClient);
@@ -95,10 +139,15 @@ export function processPayment(pspCredential, paymentRequest) {
     request.tokenInformation = tokenInformation;
     request.orderInformation = orderInformation;
 
-    instance.createPayment(request, (error, data, response) => {
+    instance.createPayment(request, (error, data, _response) => {
       if (error) {
         const message = error.response?.text || JSON.stringify(error);
         reject(new Error(`CyberSource payment error: ${message}`));
+        return;
+      }
+
+      if (!data) {
+        reject(new Error('CyberSource returned empty payment response'));
         return;
       }
 

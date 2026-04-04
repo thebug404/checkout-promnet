@@ -1,8 +1,9 @@
 import { Hono } from 'hono';
+import type { AppVariables } from '../../types.js';
 import { requirePermission } from '../../middleware/auth.js';
 import { SessionController } from './session.controller.js';
 
-const sessionRoutes = new Hono();
+const sessionRoutes = new Hono<{ Variables: AppVariables }>();
 
 sessionRoutes.post('/', requirePermission('sessions', 'create'), SessionController.create);
 sessionRoutes.get('/', requirePermission('sessions', 'read'), SessionController.findAll);

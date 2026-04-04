@@ -1,12 +1,12 @@
 import { validate } from 'class-validator';
 
-type ClassConstructor<T> = new (data?: Record<string, unknown>) => T;
+type ClassConstructor<T> = new (data?: Partial<T>) => T;
 
 export async function validateDto<T extends object>(
   DtoClass: ClassConstructor<T>,
   body: unknown
 ): Promise<string[] | null> {
-  const instance = new DtoClass(body as Record<string, unknown>);
+  const instance = new DtoClass(body as Partial<T>);
   const errors = await validate(instance, {
     whitelist: true,
     forbidNonWhitelisted: false,

@@ -1,6 +1,16 @@
 import { SessionRepository } from './session.repository.js';
 import { SessionEntity } from './session.entity.js';
 
+interface CreateSessionData {
+  api_key_id: string;
+  merchant_id: string;
+  capture_context: string;
+  status: string;
+  payment_payload: Record<string, unknown> | null;
+  callback_url: string | null;
+  expires_at: Date;
+}
+
 export class SessionService {
   async findByMerchant(merchantId: string): Promise<SessionEntity[]> {
     return SessionRepository.findBy({ merchant_id: merchantId });
@@ -10,7 +20,7 @@ export class SessionService {
     return SessionRepository.findOneBy({ id, merchant_id: merchantId });
   }
 
-  async create(data: Partial<SessionEntity>): Promise<SessionEntity> {
+  async create(data: CreateSessionData): Promise<SessionEntity> {
     const session = SessionRepository.create(data);
     return SessionRepository.save(session);
   }

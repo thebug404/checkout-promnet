@@ -1,4 +1,4 @@
-import type { Context } from 'hono';
+import type { AppContext } from '../../types.js';
 import { PspCredentialService } from './psp-credential.service.js';
 import { CreatePspCredentialDto, UpdatePspCredentialDto } from './psp-credential.dto.js';
 import { validateDto } from '../../shared/utils/validate.js';
@@ -6,8 +6,8 @@ import { validateDto } from '../../shared/utils/validate.js';
 const pspCredentialService = new PspCredentialService();
 
 export class PspCredentialController {
-  static async findAll(c: Context) {
-    const merchant = c.get('merchant' as never) as { id: string };
+  static async findAll(c: AppContext) {
+    const merchant = c.get('merchant');
     const creds = await pspCredentialService.findByMerchant(merchant.id);
     const safe = creds.map(({ cybersource_secret_key, ...rest }) => ({
       ...rest,
@@ -16,8 +16,8 @@ export class PspCredentialController {
     return c.json({ data: safe });
   }
 
-  static async create(c: Context) {
-    const merchant = c.get('merchant' as never) as { id: string };
+  static async create(c: AppContext) {
+    const merchant = c.get('merchant');
     const body = await c.req.json();
 
     const errors = await validateDto(CreatePspCredentialDto, body);
@@ -30,8 +30,8 @@ export class PspCredentialController {
     return c.json({ data: { ...safe, cybersource_secret_key: cybersource_secret_key ? '***' : null } }, 201);
   }
 
-  static async update(c: Context) {
-    const merchant = c.get('merchant' as never) as { id: string };
+  static async update(c: AppContext) {
+    const merchant = c.get('merchant');
     const body = await c.req.json();
 
     const errors = await validateDto(UpdatePspCredentialDto, body);

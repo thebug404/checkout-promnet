@@ -1,4 +1,4 @@
-import type { MiddlewareHandler } from 'hono';
+import type { AppMiddleware } from '../types.js';
 import { AuditLogService } from '../modules/audit-logs/audit-log.service.js';
 
 const auditLogService = new AuditLogService();
@@ -6,11 +6,11 @@ const auditLogService = new AuditLogService();
 /**
  * Audit logging middleware. Records every authenticated request.
  */
-export function auditMiddleware(): MiddlewareHandler {
+export function auditMiddleware(): AppMiddleware {
   return async (c, next) => {
     await next();
 
-    const apiKey = c.get('apiKey' as never) as { id: string } | undefined;
+    const apiKey = c.get('apiKey');
     if (!apiKey) return;
 
     await auditLogService.create({

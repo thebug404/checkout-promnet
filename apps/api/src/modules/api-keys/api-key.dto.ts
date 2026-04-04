@@ -23,7 +23,7 @@ export class CreateApiKeyDto {
   @IsString()
   created_by?: string;
 
-  constructor(data?: Record<string, unknown>) {
+  constructor(data?: Partial<CreateApiKeyDto>) {
     if (data) Object.assign(this, data);
   }
 }

@@ -36,15 +36,12 @@ export class PspCredentialService {
     const credential = await PspCredentialRepository.findOneBy({ id, merchant_id: merchantId });
     if (!credential) return null;
 
-    const allowed: (keyof UpdatePspCredentialDto)[] = [
-      'credential_ref', 'is_active', 'cybersource_merchant_id',
-      'cybersource_key_id', 'cybersource_secret_key',
-    ];
-    for (const key of allowed) {
-      if (dto[key] !== undefined) {
-        (credential as unknown as Record<string, unknown>)[key] = dto[key];
-      }
-    }
+    if (dto.credential_ref !== undefined) credential.credential_ref = dto.credential_ref ?? null;
+    if (dto.is_active !== undefined) credential.is_active = dto.is_active;
+    if (dto.cybersource_merchant_id !== undefined) credential.cybersource_merchant_id = dto.cybersource_merchant_id ?? null;
+    if (dto.cybersource_key_id !== undefined) credential.cybersource_key_id = dto.cybersource_key_id ?? null;
+    if (dto.cybersource_secret_key !== undefined) credential.cybersource_secret_key = dto.cybersource_secret_key ?? null;
+
     return PspCredentialRepository.save(credential);
   }
 }

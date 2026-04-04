@@ -59,16 +59,9 @@ export class ApiKeyService {
     const apiKey = await ApiKeyRepository.findOneBy({ id, merchant_id: merchantId });
     if (!apiKey) return null;
 
-    const allowed: (keyof UpdateApiKeyDto)[] = ['allowed_origins', 'ip_whitelist', 'expires_at'];
-    for (const key of allowed) {
-      if (dto[key] !== undefined) {
-        if (key === 'expires_at') {
-          apiKey.expires_at = new Date(dto.expires_at!);
-        } else {
-          (apiKey as unknown as Record<string, unknown>)[key] = dto[key];
-        }
-      }
-    }
+    if (dto.allowed_origins !== undefined) apiKey.allowed_origins = dto.allowed_origins;
+    if (dto.ip_whitelist !== undefined) apiKey.ip_whitelist = dto.ip_whitelist;
+    if (dto.expires_at !== undefined) apiKey.expires_at = new Date(dto.expires_at);
 
     return ApiKeyRepository.save(apiKey);
   }

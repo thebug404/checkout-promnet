@@ -24,7 +24,7 @@ export class CreatePspCredentialDto {
   @IsString()
   cybersource_secret_key?: string;
 
-  constructor(data?: Record<string, unknown>) {
+  constructor(data?: Partial<CreatePspCredentialDto>) {
     if (data) Object.assign(this, data);
   }
 }
@@ -50,7 +50,7 @@ export class UpdatePspCredentialDto {
   @IsString()
   cybersource_secret_key?: string;
 
-  constructor(data?: Record<string, unknown>) {
+  constructor(data?: Partial<UpdatePspCredentialDto>) {
     if (data) Object.assign(this, data);
   }
 }

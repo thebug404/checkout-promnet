@@ -5,6 +5,7 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 
 import { AppDataSource } from './database/data-source.js';
+import type { AppVariables } from './types.js';
 import { authMiddleware } from './middleware/auth.js';
 import { auditMiddleware } from './middleware/audit.js';
 
@@ -27,7 +28,7 @@ app.get('/health', (c) => {
 });
 
 // Protected routes — apply auth + audit
-const api = new Hono();
+const api = new Hono<{ Variables: AppVariables }>();
 api.use('*', authMiddleware());
 api.use('*', auditMiddleware());
 

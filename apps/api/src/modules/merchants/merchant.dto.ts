@@ -13,7 +13,7 @@ export class CreateMerchantDto {
   @IsString()
   country_code!: string;
 
-  constructor(data?: Record<string, unknown>) {
+  constructor(data?: Partial<CreateMerchantDto>) {
     if (data) Object.assign(this, data);
   }
 }
@@ -35,7 +35,7 @@ export class UpdateMerchantDto {
   @IsIn(['active', 'inactive'], { message: 'status must be active or inactive' })
   status?: string;
 
-  constructor(data?: Record<string, unknown>) {
+  constructor(data?: Partial<UpdateMerchantDto>) {
     if (data) Object.assign(this, data);
   }
 }

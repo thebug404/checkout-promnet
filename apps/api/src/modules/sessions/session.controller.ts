@@ -1,4 +1,4 @@
-import type { Context } from 'hono';
+import type { AppContext } from '../../types.js';
 import { validate } from 'class-validator';
 import { SessionService } from './session.service.js';
 import { PspCredentialService } from '../psp-credentials/psp-credential.service.js';
@@ -15,7 +15,12 @@ import {
 } from './session.dto.js';
 import { validateDto } from '../../shared/utils/validate.js';
 import { signPayload } from '../../shared/utils/crypto.js';
-import { generateCaptureContext, processPayment } from '../../shared/services/cybersource.js';
+import {
+  generateCaptureContext,
+  processPayment,
+  type CybersourcePaymentResult,
+  type PaymentOrderInformation,
+} from '../../shared/services/cybersource.js';
 
 const sessionService = new SessionService();
 const pspCredentialService = new PspCredentialService();
@@ -73,10 +78,10 @@ function buildSessionPayload(body: CreateSessionDto) {
 }
 
 export class SessionController {
-  static async create(c: Context) {
+  static async create(c: AppContext) {
     const body = await c.req.json();
-    const merchant = c.get('merchant' as never) as { id: string };
-    const apiKey = c.get('apiKey' as never) as { id: string };
+    const merchant = c.get('merchant');
+    const apiKey = c.get('apiKey');
 
     const createSessionDto = new CreateSessionDto();
     createSessionDto.targetOrigins = body.targetOrigins;
@@ -139,10 +144,7 @@ export class SessionController {
     let captureContext: string;
     let decodedData: Record<string, unknown>;
     try {
-      const result = (await generateCaptureContext(pspCred, paymentPayload)) as {
-        captureContext: string;
-        decodedData: Record<string, unknown>;
-      };
+      const result = await generateCaptureContext(pspCred, paymentPayload);
       captureContext = result.captureContext;
       decodedData = result.decodedData;
     } catch (err) {
@@ -182,8 +184,8 @@ export class SessionController {
     );
   }
 
-  static async findById(c: Context) {
-    const merchant = c.get('merchant' as never) as { id: string };
+  static async findById(c: AppContext) {
+    const merchant = c.get('merchant');
     const session = await sessionService.findByIdAndMerchant(c.req.param('id')!, merchant.id);
     if (!session) {
       return c.json({ error: 'Session not found' }, 404);
@@ -202,8 +204,8 @@ export class SessionController {
     });
   }
 
-  static async findAll(c: Context) {
-    const merchant = c.get('merchant' as never) as { id: string };
+  static async findAll(c: AppContext) {
+    const merchant = c.get('merchant');
     const allSessions = await sessionService.findByMerchant(merchant.id);
     const data = allSessions.map((s) => ({
       id: s.id,
@@ -214,9 +216,9 @@ export class SessionController {
     return c.json({ data });
   }
 
-  static async processPayment(c: Context) {
+  static async processPayment(c: AppContext) {
     const id = c.req.param('id')!;
-    const merchant = c.get('merchant' as never) as { id: string };
+    const merchant = c.get('merchant');
     const body = await c.req.json();
 
     const errors = await validateDto(ProcessPaymentDto, body);
@@ -240,13 +242,13 @@ export class SessionController {
       return c.json({ error: 'No active CyberSource credentials' }, 422);
     }
 
-    let paymentResult: Record<string, unknown>;
+    let paymentResult: CybersourcePaymentResult;
     try {
-      paymentResult = (await processPayment(pspCred, {
+      paymentResult = await processPayment(pspCred, {
         transientToken: dto.transientToken,
         referenceCode: dto.referenceCode ?? `PUC-${session.id}`,
-        orderInformation: (session.payment_payload as Record<string, unknown>)?.['orderInformation'],
-      })) as Record<string, unknown>;
+        orderInformation: session.payment_payload?.['orderInformation'] as PaymentOrderInformation,
+      });
     } catch (err) {
       const error = err as Error;
       console.error('[CyberSource Payment Error]', error.message);
@@ -254,19 +256,19 @@ export class SessionController {
       return c.json({ error: 'Payment processing failed', details: error.message }, 502);
     }
 
-    const status = paymentResult['status'] === 'AUTHORIZED' ? 'COMPLETED' : 'DECLINED';
+    const status = paymentResult.status === 'AUTHORIZED' ? 'COMPLETED' : 'DECLINED';
     await sessionService.updateStatus(id, {
       status,
-      cybersource_payment_id: paymentResult['id'] as string,
-      cybersource_status: paymentResult['status'] as string,
+      cybersource_payment_id: paymentResult.id,
+      cybersource_status: paymentResult.status,
     });
 
     if (session.callback_url) {
       const callbackPayload = {
         session_id: session.id,
         status,
-        cybersource_payment_id: paymentResult['id'],
-        cybersource_status: paymentResult['status'],
+        cybersource_payment_id: paymentResult.id,
+        cybersource_status: paymentResult.status,
         merchant_id: merchant.id,
         completed_at: new Date().toISOString(),
       };
@@ -280,16 +282,16 @@ export class SessionController {
       data: {
         session_id: session.id,
         status,
-        cybersource_payment_id: paymentResult['id'],
-        cybersource_status: paymentResult['status'],
-        reconciliation_id: paymentResult['reconciliationId'],
+        cybersource_payment_id: paymentResult.id,
+        cybersource_status: paymentResult.status,
+        reconciliation_id: paymentResult.reconciliationId,
       },
     });
   }
 
-  static async complete(c: Context) {
+  static async complete(c: AppContext) {
     const id = c.req.param('id')!;
-    const merchant = c.get('merchant' as never) as { id: string };
+    const merchant = c.get('merchant');
     const body = await c.req.json();
 
     const errors = await validateDto(CompleteSessionDto, body);

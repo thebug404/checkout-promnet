@@ -1,4 +1,4 @@
-import type { Context } from 'hono';
+import type { AppContext } from '../../types.js';
 import { MerchantService } from './merchant.service.js';
 import { CreateMerchantDto, UpdateMerchantDto } from './merchant.dto.js';
 import { validateDto } from '../../shared/utils/validate.js';
@@ -6,12 +6,12 @@ import { validateDto } from '../../shared/utils/validate.js';
 const merchantService = new MerchantService();
 
 export class MerchantController {
-  static async findAll(c: Context) {
+  static async findAll(c: AppContext) {
     const merchants = await merchantService.findAll();
     return c.json({ data: merchants });
   }
 
-  static async findById(c: Context) {
+  static async findById(c: AppContext) {
     const merchant = await merchantService.findById(c.req.param('id')!);
     if (!merchant) {
       return c.json({ error: 'Merchant not found' }, 404);
@@ -19,7 +19,7 @@ export class MerchantController {
     return c.json({ data: merchant });
   }
 
-  static async create(c: Context) {
+  static async create(c: AppContext) {
     const body = await c.req.json();
 
     const errors = await validateDto(CreateMerchantDto, body);
@@ -38,7 +38,7 @@ export class MerchantController {
     return c.json({ data: merchant }, 201);
   }
 
-  static async update(c: Context) {
+  static async update(c: AppContext) {
     const body = await c.req.json();
 
     const errors = await validateDto(UpdateMerchantDto, body);
@@ -53,7 +53,7 @@ export class MerchantController {
     return c.json({ data: updated });
   }
 
-  static async delete(c: Context) {
+  static async delete(c: AppContext) {
     const updated = await merchantService.deactivate(c.req.param('id')!);
     if (!updated) {
       return c.json({ error: 'Merchant not found' }, 404);

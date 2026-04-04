@@ -22,7 +22,7 @@ export class AmountDetailsDto {
   @IsString()
   currency!: string;
 
-  constructor(data?: Record<string, unknown>) {
+  constructor(data?: Partial<AmountDetailsDto>) {
     if (data) Object.assign(this, data);
   }
 }
@@ -83,7 +83,7 @@ export class CaptureMandateDto {
   @IsOptional() @IsArray() @IsString({ each: true }) shipToCountries?: string[];
   @IsOptional() @IsBoolean() showAcceptedNetworkIcons?: boolean;
 
-  constructor(data?: Record<string, unknown>) {
+  constructor(data?: Partial<CaptureMandateDto>) {
     if (data) Object.assign(this, data);
   }
 }
@@ -93,7 +93,7 @@ export class CompleteMandateDto {
   @IsOptional() @IsBoolean() decisionManager?: boolean;
   @IsOptional() @IsBoolean() consumerAuthentication?: boolean;
 
-  constructor(data?: Record<string, unknown>) {
+  constructor(data?: Partial<CompleteMandateDto>) {
     if (data) Object.assign(this, data);
   }
 }
@@ -145,7 +145,7 @@ export class ProcessPaymentDto {
   @IsString()
   referenceCode?: string;
 
-  constructor(data?: Record<string, unknown>) {
+  constructor(data?: Partial<ProcessPaymentDto>) {
     if (data) Object.assign(this, data);
   }
 }
@@ -155,7 +155,7 @@ export class CompleteSessionDto {
   @IsIn(['DECLINED', 'COMPLETED'], { message: 'status must be DECLINED or COMPLETED' })
   status?: string;
 
-  constructor(data?: Record<string, unknown>) {
+  constructor(data?: Partial<CompleteSessionDto>) {
     if (data) Object.assign(this, data);
   }
 }

@@ -29,12 +29,11 @@ export class MerchantService {
     const merchant = await MerchantRepository.findOneBy({ id });
     if (!merchant) return null;
 
-    const allowed: (keyof UpdateMerchantDto)[] = ['name', 'ruc', 'country_code', 'status'];
-    for (const key of allowed) {
-      if (dto[key] !== undefined) {
-        (merchant as unknown as Record<string, unknown>)[key] = dto[key];
-      }
-    }
+    if (dto.name !== undefined) merchant.name = dto.name;
+    if (dto.ruc !== undefined) merchant.ruc = dto.ruc;
+    if (dto.country_code !== undefined) merchant.country_code = dto.country_code;
+    if (dto.status !== undefined) merchant.status = dto.status;
+
     return MerchantRepository.save(merchant);
   }
 

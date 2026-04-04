@@ -1,4 +1,4 @@
-import type { Context } from 'hono';
+import type { AppContext } from '../../types.js';
 import { ApiKeyService } from './api-key.service.js';
 import { CreateApiKeyDto, UpdateApiKeyDto } from './api-key.dto.js';
 import { validateDto } from '../../shared/utils/validate.js';
@@ -6,15 +6,15 @@ import { validateDto } from '../../shared/utils/validate.js';
 const apiKeyService = new ApiKeyService();
 
 export class ApiKeyController {
-  static async findAll(c: Context) {
-    const merchant = c.get('merchant' as never) as { id: string };
+  static async findAll(c: AppContext) {
+    const merchant = c.get('merchant');
     const keys = await apiKeyService.findByMerchant(merchant.id);
     const safe = keys.map(({ key_hash: _kh, ...rest }) => rest);
     return c.json({ data: safe });
   }
 
-  static async findById(c: Context) {
-    const merchant = c.get('merchant' as never) as { id: string };
+  static async findById(c: AppContext) {
+    const merchant = c.get('merchant');
     const key = await apiKeyService.findByIdAndMerchant(c.req.param('id')!, merchant.id);
     if (!key) {
       return c.json({ error: 'API key not found' }, 404);
@@ -23,8 +23,8 @@ export class ApiKeyController {
     return c.json({ data: safe });
   }
 
-  static async create(c: Context) {
-    const merchant = c.get('merchant' as never) as { id: string };
+  static async create(c: AppContext) {
+    const merchant = c.get('merchant');
     const body = await c.req.json();
 
     const errors = await validateDto(CreateApiKeyDto, body);
@@ -45,8 +45,8 @@ export class ApiKeyController {
     }, 201);
   }
 
-  static async update(c: Context) {
-    const merchant = c.get('merchant' as never) as { id: string };
+  static async update(c: AppContext) {
+    const merchant = c.get('merchant');
     const body = await c.req.json();
 
     const errors = await validateDto(UpdateApiKeyDto, body);
@@ -63,8 +63,8 @@ export class ApiKeyController {
     return c.json({ data: safe });
   }
 
-  static async revoke(c: Context) {
-    const merchant = c.get('merchant' as never) as { id: string };
+  static async revoke(c: AppContext) {
+    const merchant = c.get('merchant');
     const success = await apiKeyService.revoke(c.req.param('id')!, merchant.id);
     if (!success) {
       return c.json({ error: 'API key not found' }, 404);

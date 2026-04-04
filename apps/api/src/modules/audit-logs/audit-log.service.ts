@@ -2,8 +2,16 @@ import { AuditLogRepository } from './audit-log.repository.js';
 import { AuditLogEntity } from './audit-log.entity.js';
 import { ApiKeyRepository } from '../api-keys/api-key.repository.js';
 
+interface CreateAuditLogData {
+  api_key_id: string;
+  event_type: string;
+  ip_address: string;
+  endpoint: string;
+  http_status: number;
+}
+
 export class AuditLogService {
-  async create(data: Partial<AuditLogEntity>): Promise<AuditLogEntity> {
+  async create(data: CreateAuditLogData): Promise<AuditLogEntity> {
     const log = AuditLogRepository.create(data);
     return AuditLogRepository.save(log);
   }

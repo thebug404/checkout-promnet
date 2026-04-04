@@ -1,4 +1,4 @@
-import type { MiddlewareHandler } from 'hono';
+import type { AppMiddleware } from '../types.js';
 import { parseApiKey, verifyApiKey } from '../shared/utils/crypto.js';
 import { ApiKeyService } from '../modules/api-keys/api-key.service.js';
 
@@ -9,7 +9,7 @@ const apiKeyService = new ApiKeyService();
  * Validates the API key, checks active/expiry/origin/IP, resolves role & permissions,
  * and injects the auth context into c.set().
  */
-export function authMiddleware(): MiddlewareHandler {
+export function authMiddleware(): AppMiddleware {
   return async (c, next) => {
     const authHeader = c.req.header('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -79,10 +79,10 @@ export function authMiddleware(): MiddlewareHandler {
     const permissions = apiKey.role?.permissions ?? [];
 
     // Set auth context
-    c.set('apiKey', apiKey as never);
-    c.set('merchant', merchant as never);
-    c.set('role', apiKey.role as never);
-    c.set('permissions', permissions as never);
+    c.set('apiKey', apiKey);
+    c.set('merchant', merchant);
+    c.set('role', apiKey.role);
+    c.set('permissions', permissions);
 
     await next();
   };
@@ -91,9 +91,9 @@ export function authMiddleware(): MiddlewareHandler {
 /**
  * Permission check middleware. Use after authMiddleware().
  */
-export function requirePermission(resource: string, action: string): MiddlewareHandler {
+export function requirePermission(resource: string, action: string): AppMiddleware {
   return async (c, next) => {
-    const permissions = (c.get('permissions' as never) as Array<{ resource: string; action: string }> | undefined) ?? [];
+    const permissions = c.get('permissions') ?? [];
     const has = permissions.some((p) => p.resource === resource && p.action === action);
     if (!has) {
       return c.json({ error: `Forbidden: requires ${resource}:${action}` }, 403);
