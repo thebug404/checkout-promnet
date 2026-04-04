@@ -1,17 +1,12 @@
 import type { AppContext } from '../../types.js';
 import { validate } from 'class-validator';
+import { plainToInstance } from 'class-transformer';
 import { SessionService } from './session.service.js';
 import { PspCredentialService } from '../psp-credentials/psp-credential.service.js';
 import {
   CreateSessionDto,
   ProcessPaymentDto,
   CompleteSessionDto,
-  OrderInformationDto,
-  AmountDetailsDto,
-  BillToDto,
-  ShipToDto,
-  CaptureMandateDto,
-  CompleteMandateDto,
 } from './session.dto.js';
 import { validateDto } from '../../shared/utils/validate.js';
 import { signPayload } from '../../shared/utils/crypto.js';
@@ -83,46 +78,7 @@ export class SessionController {
     const merchant = c.get('merchant');
     const apiKey = c.get('apiKey');
 
-    const createSessionDto = new CreateSessionDto();
-    createSessionDto.targetOrigins = body.targetOrigins;
-    createSessionDto.clientVersion = body.clientVersion;
-    createSessionDto.allowedCardNetworks = body.allowedCardNetworks;
-    createSessionDto.allowedPaymentTypes = body.allowedPaymentTypes;
-    createSessionDto.country = body.country;
-    createSessionDto.locale = body.locale;
-    createSessionDto.callback_url = body.callback_url;
-
-    const orderInformationDto = new OrderInformationDto();
-    const amountDetailsDto = new AmountDetailsDto();
-    amountDetailsDto.totalAmount = body.orderInformation?.amountDetails?.totalAmount;
-    amountDetailsDto.currency = body.orderInformation?.amountDetails?.currency;
-    orderInformationDto.amountDetails = amountDetailsDto;
-
-    if (body.orderInformation?.billTo) {
-      const billToDto = new BillToDto();
-      Object.assign(billToDto, body.orderInformation.billTo);
-      orderInformationDto.billTo = billToDto;
-    }
-
-    if (body.orderInformation?.shipTo) {
-      const shipToDto = new ShipToDto();
-      Object.assign(shipToDto, body.orderInformation.shipTo);
-      orderInformationDto.shipTo = shipToDto;
-    }
-
-    createSessionDto.orderInformation = orderInformationDto;
-
-    if (body.captureMandate) {
-      const captureMandateDto = new CaptureMandateDto();
-      Object.assign(captureMandateDto, body.captureMandate);
-      createSessionDto.captureMandate = captureMandateDto;
-    }
-
-    if (body.completeMandate) {
-      const completeMandateDto = new CompleteMandateDto();
-      Object.assign(completeMandateDto, body.completeMandate);
-      createSessionDto.completeMandate = completeMandateDto;
-    }
+    const createSessionDto = plainToInstance(CreateSessionDto, body);
 
     const validationErrors = await validate(createSessionDto);
     if (validationErrors.length > 0) {

@@ -11,6 +11,7 @@ import {
   ValidateNested,
   ArrayNotEmpty,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { environments } from '../../config/environments.js';
 
 export class AmountDetailsDto {
@@ -21,10 +22,6 @@ export class AmountDetailsDto {
   @IsNotEmpty({ message: 'orderInformation.amountDetails.currency is required' })
   @IsString()
   currency!: string;
-
-  constructor(data?: Partial<AmountDetailsDto>) {
-    if (data) Object.assign(this, data);
-  }
 }
 
 export class BillToDto {
@@ -64,14 +61,17 @@ export class ShipToDto {
 export class OrderInformationDto {
   @IsDefined({ message: 'orderInformation.amountDetails is required' })
   @ValidateNested()
+  @Type(() => AmountDetailsDto)
   amountDetails!: AmountDetailsDto;
 
   @IsOptional()
   @ValidateNested()
+  @Type(() => BillToDto)
   billTo?: BillToDto;
 
   @IsOptional()
   @ValidateNested()
+  @Type(() => ShipToDto)
   shipTo?: ShipToDto;
 }
 
@@ -82,20 +82,12 @@ export class CaptureMandateDto {
   @IsOptional() @IsBoolean() requestShipping?: boolean;
   @IsOptional() @IsArray() @IsString({ each: true }) shipToCountries?: string[];
   @IsOptional() @IsBoolean() showAcceptedNetworkIcons?: boolean;
-
-  constructor(data?: Partial<CaptureMandateDto>) {
-    if (data) Object.assign(this, data);
-  }
 }
 
 export class CompleteMandateDto {
   @IsOptional() @IsIn(['AUTH', 'PREFER_AUTH', 'CAPTURE', 'SALE']) type?: string;
   @IsOptional() @IsBoolean() decisionManager?: boolean;
   @IsOptional() @IsBoolean() consumerAuthentication?: boolean;
-
-  constructor(data?: Partial<CompleteMandateDto>) {
-    if (data) Object.assign(this, data);
-  }
 }
 
 const VALID_CARD_NETWORKS = ['VISA', 'MASTERCARD', 'AMEX', 'DISCOVER', 'JCB', 'DINERSCLUB'];
@@ -112,6 +104,7 @@ export class CreateSessionDto {
 
   @IsDefined({ message: 'orderInformation is required' })
   @ValidateNested()
+  @Type(() => OrderInformationDto)
   orderInformation!: OrderInformationDto;
 
   @IsOptional()
@@ -124,8 +117,8 @@ export class CreateSessionDto {
   @IsIn(VALID_PAYMENT_TYPES, { each: true, message: 'Invalid payment type in allowedPaymentTypes' })
   allowedPaymentTypes?: string[];
 
-  @IsOptional() @ValidateNested() captureMandate?: CaptureMandateDto;
-  @IsOptional() @ValidateNested() completeMandate?: CompleteMandateDto;
+  @IsOptional() @ValidateNested() @Type(() => CaptureMandateDto) captureMandate?: CaptureMandateDto;
+  @IsOptional() @ValidateNested() @Type(() => CompleteMandateDto) completeMandate?: CompleteMandateDto;
 
   @IsOptional()
   @IsUrl({}, { message: 'callback_url must be a valid URL' })
@@ -144,18 +137,10 @@ export class ProcessPaymentDto {
   @IsOptional()
   @IsString()
   referenceCode?: string;
-
-  constructor(data?: Partial<ProcessPaymentDto>) {
-    if (data) Object.assign(this, data);
-  }
 }
 
 export class CompleteSessionDto {
   @IsOptional()
   @IsIn(['DECLINED', 'COMPLETED'], { message: 'status must be DECLINED or COMPLETED' })
   status?: string;
-
-  constructor(data?: Partial<CompleteSessionDto>) {
-    if (data) Object.assign(this, data);
-  }
 }

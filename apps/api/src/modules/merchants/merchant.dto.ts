@@ -12,10 +12,6 @@ export class CreateMerchantDto {
   @IsNotEmpty({ message: 'country_code is required' })
   @IsString()
   country_code!: string;
-
-  constructor(data?: Partial<CreateMerchantDto>) {
-    if (data) Object.assign(this, data);
-  }
 }
 
 export class UpdateMerchantDto {
@@ -34,8 +30,4 @@ export class UpdateMerchantDto {
   @IsOptional()
   @IsIn(['active', 'inactive'], { message: 'status must be active or inactive' })
   status?: string;
-
-  constructor(data?: Partial<UpdateMerchantDto>) {
-    if (data) Object.assign(this, data);
-  }
 }

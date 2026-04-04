@@ -23,10 +23,6 @@ export class CreatePspCredentialDto {
   @IsNotEmpty({ message: 'cybersource_secret_key is required for CyberSource PSP' })
   @IsString()
   cybersource_secret_key?: string;
-
-  constructor(data?: Partial<CreatePspCredentialDto>) {
-    if (data) Object.assign(this, data);
-  }
 }
 
 export class UpdatePspCredentialDto {
@@ -49,8 +45,4 @@ export class UpdatePspCredentialDto {
   @IsOptional()
   @IsString()
   cybersource_secret_key?: string;
-
-  constructor(data?: Partial<UpdatePspCredentialDto>) {
-    if (data) Object.assign(this, data);
-  }
 }

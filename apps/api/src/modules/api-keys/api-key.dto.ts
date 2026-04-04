@@ -22,10 +22,6 @@ export class CreateApiKeyDto {
   @IsOptional()
   @IsString()
   created_by?: string;
-
-  constructor(data?: Partial<CreateApiKeyDto>) {
-    if (data) Object.assign(this, data);
-  }
 }
 
 export class UpdateApiKeyDto {
@@ -42,8 +38,4 @@ export class UpdateApiKeyDto {
   @IsOptional()
   @IsISO8601({}, { message: 'expires_at must be a valid ISO 8601 date' })
   expires_at?: string;
-
-  constructor(data?: Record<string, unknown>) {
-    if (data) Object.assign(this, data);
-  }
 }
