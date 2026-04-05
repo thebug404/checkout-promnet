@@ -7,8 +7,6 @@ import { getOptionalUser } from "~/services/auth-helpers.server"
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await getOptionalUser(request)
 
-  console.log("Loader user:", user) // Debug log
-
   if (user) throw redirect("/dashboard")
   return null
 }
