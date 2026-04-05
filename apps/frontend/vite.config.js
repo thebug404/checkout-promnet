@@ -7,6 +7,7 @@ export default defineConfig({
   plugins: [react(), basicSsl()],
   server: {
     https: true,
+    port: 5174,
     proxy: {
       '/v1': {
         target: 'http://localhost:3000',
