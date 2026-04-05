@@ -46,9 +46,6 @@ services:
       DB_USERNAME: ${DB_USERNAME:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_NAME: ${DB_NAME:-checkout_promnet}
-      CYBERSOURCE_MERCHANT_ID: ${CYBERSOURCE_MERCHANT_ID}
-      CYBERSOURCE_KEY_ID: ${CYBERSOURCE_KEY_ID}
-      CYBERSOURCE_SECRET_KEY: ${CYBERSOURCE_SECRET_KEY}
       KEYCLOAK_BASE_URL: http://keycloak:8080
       KEYCLOAK_REALM: ${KEYCLOAK_REALM:-checkout-promnet}
       KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:-checkout-api}
@@ -72,7 +69,25 @@ services:
       dockerfile: apps/frontend/Dockerfile
     ports:
       - "80:80"
-      - "8443:8443"
+      - "5174:5174"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "5173:5173"
+    environment:
+      PORT: 5173
+      NODE_ENV: ${NODE_ENV:-production}
+      API_URL: http://api:3000
+      KEYCLOAK_BASE_URL: http://keycloak:8080
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-checkout-promnet}
+      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:-checkout-web}
     depends_on:
       api:
         condition: service_healthy
