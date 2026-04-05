@@ -10,7 +10,8 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "@checkout-promnet/*": ["./src/*"]
+      "@checkout-promnet/*": ["./src/*"],
+      "@workspace/ui/*": ["./src/*"]
     }
   },
   "include": ["."],
