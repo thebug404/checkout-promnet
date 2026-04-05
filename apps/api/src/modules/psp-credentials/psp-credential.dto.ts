@@ -1,6 +1,10 @@
 import { IsBoolean, IsNotEmpty, IsOptional, IsString, ValidateIf } from 'class-validator';
 
 export class CreatePspCredentialDto {
+  @IsOptional()
+  @IsString()
+  merchant_id?: string;
+
   @IsNotEmpty({ message: 'psp_name is required' })
   @IsString()
   psp_name!: string;

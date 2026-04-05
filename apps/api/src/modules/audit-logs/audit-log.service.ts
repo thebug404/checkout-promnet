@@ -16,6 +16,16 @@ export class AuditLogService {
     return AuditLogRepository.save(log);
   }
 
+  async findAll(page: number, limit: number) {
+    const [data, total] = await AuditLogRepository.createQueryBuilder('log')
+      .orderBy('log.created_at', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+
+    return { data, total };
+  }
+
   async findByMerchant(merchantId: string, page: number, limit: number) {
     const merchantKeys = await ApiKeyRepository.findBy({ merchant_id: merchantId });
     const keyIds = merchantKeys.map((k) => k.id);

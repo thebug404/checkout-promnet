@@ -5,12 +5,23 @@ import { generateApiKey, hashApiKey } from '../../shared/utils/crypto.js';
 import { RoleRepository } from '../roles/role.repository.js';
 
 export class ApiKeyService {
+  async findAll(): Promise<ApiKeyEntity[]> {
+    return ApiKeyRepository.find({ relations: ['merchant', 'role'] });
+  }
+
   async findByMerchant(merchantId: string): Promise<ApiKeyEntity[]> {
     return ApiKeyRepository.findBy({ merchant_id: merchantId });
   }
 
   async findByIdAndMerchant(id: string, merchantId: string): Promise<ApiKeyEntity | null> {
     return ApiKeyRepository.findOneBy({ id, merchant_id: merchantId });
+  }
+
+  async findByIdWithRelations(id: string): Promise<ApiKeyEntity | null> {
+    return ApiKeyRepository.findOne({
+      where: { id },
+      relations: ['merchant', 'role', 'role.permissions'],
+    });
   }
 
   async findByPrefix(prefix: string): Promise<ApiKeyEntity | null> {
@@ -66,8 +77,27 @@ export class ApiKeyService {
     return ApiKeyRepository.save(apiKey);
   }
 
+  async updateById(id: string, dto: UpdateApiKeyDto): Promise<ApiKeyEntity | null> {
+    const apiKey = await ApiKeyRepository.findOneBy({ id });
+    if (!apiKey) return null;
+
+    if (dto.allowed_origins !== undefined) apiKey.allowed_origins = dto.allowed_origins;
+    if (dto.ip_whitelist !== undefined) apiKey.ip_whitelist = dto.ip_whitelist;
+    if (dto.expires_at !== undefined) apiKey.expires_at = new Date(dto.expires_at);
+
+    return ApiKeyRepository.save(apiKey);
+  }
+
   async revoke(id: string, merchantId: string): Promise<boolean> {
     const apiKey = await ApiKeyRepository.findOneBy({ id, merchant_id: merchantId });
+    if (!apiKey) return false;
+    apiKey.is_active = false;
+    await ApiKeyRepository.save(apiKey);
+    return true;
+  }
+
+  async revokeById(id: string): Promise<boolean> {
+    const apiKey = await ApiKeyRepository.findOneBy({ id });
     if (!apiKey) return false;
     apiKey.is_active = false;
     await ApiKeyRepository.save(apiKey);

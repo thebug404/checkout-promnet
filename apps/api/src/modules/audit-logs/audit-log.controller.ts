@@ -10,7 +10,9 @@ export class AuditLogController {
     const page = parseInt(c.req.query('page') || '1', 10);
     const limit = Math.min(parseInt(c.req.query('limit') || '50', 10), 100);
 
-    const { data, total } = await auditLogService.findByMerchant(merchant.id, page, limit);
+    const { data, total } = merchant
+      ? await auditLogService.findByMerchant(merchant.id, page, limit)
+      : await auditLogService.findAll(page, limit);
 
     return c.json({
       data,

@@ -8,14 +8,19 @@ const apiKeyService = new ApiKeyService();
 export class ApiKeyController {
   static async findAll(c: AppContext) {
     const merchant = c.get('merchant');
-    const keys = await apiKeyService.findByMerchant(merchant.id);
+    const keys = merchant
+      ? await apiKeyService.findByMerchant(merchant.id)
+      : await apiKeyService.findAll();
     const safe = keys.map(({ key_hash: _kh, ...rest }) => rest);
     return c.json({ data: safe });
   }
 
   static async findById(c: AppContext) {
     const merchant = c.get('merchant');
-    const key = await apiKeyService.findByIdAndMerchant(c.req.param('id')!, merchant.id);
+    const id = c.req.param('id')!;
+    const key = merchant
+      ? await apiKeyService.findByIdAndMerchant(id, merchant.id)
+      : await apiKeyService.findByIdWithRelations(id);
     if (!key) {
       return c.json({ error: 'API key not found' }, 404);
     }
@@ -24,7 +29,6 @@ export class ApiKeyController {
   }
 
   static async create(c: AppContext) {
-    const merchant = c.get('merchant');
     const body = await c.req.json();
 
     const errors = await validateDto(CreateApiKeyDto, body);
@@ -32,7 +36,14 @@ export class ApiKeyController {
       return c.json({ error: 'Validation failed', details: errors }, 400);
     }
 
-    const result = await apiKeyService.create(body as CreateApiKeyDto, merchant.id);
+    const dto = body as CreateApiKeyDto;
+    const merchant = c.get('merchant');
+    const merchantId = dto.merchant_id ?? merchant?.id;
+    if (!merchantId) {
+      return c.json({ error: 'merchant_id is required' }, 400);
+    }
+
+    const result = await apiKeyService.create(dto, merchantId);
     if (!result) {
       return c.json({ error: 'Role not found' }, 404);
     }
@@ -46,7 +57,6 @@ export class ApiKeyController {
   }
 
   static async update(c: AppContext) {
-    const merchant = c.get('merchant');
     const body = await c.req.json();
 
     const errors = await validateDto(UpdateApiKeyDto, body);
@@ -54,7 +64,10 @@ export class ApiKeyController {
       return c.json({ error: 'Validation failed', details: errors }, 400);
     }
 
-    const updated = await apiKeyService.update(c.req.param('id')!, merchant.id, body as UpdateApiKeyDto);
+    const merchant = c.get('merchant');
+    const updated = merchant
+      ? await apiKeyService.update(c.req.param('id')!, merchant.id, body as UpdateApiKeyDto)
+      : await apiKeyService.updateById(c.req.param('id')!, body as UpdateApiKeyDto);
     if (!updated) {
       return c.json({ error: 'API key not found' }, 404);
     }
@@ -65,7 +78,9 @@ export class ApiKeyController {
 
   static async revoke(c: AppContext) {
     const merchant = c.get('merchant');
-    const success = await apiKeyService.revoke(c.req.param('id')!, merchant.id);
+    const success = merchant
+      ? await apiKeyService.revoke(c.req.param('id')!, merchant.id)
+      : await apiKeyService.revokeById(c.req.param('id')!);
     if (!success) {
       return c.json({ error: 'API key not found' }, 404);
     }

@@ -5,11 +5,21 @@ import type { RoleEntity } from './modules/roles/role.entity.js';
 import type { PermissionEntity } from './modules/roles/permission.entity.js';
 
 export type AppVariables = {
-  apiKey: ApiKeyEntity;
-  merchant: MerchantEntity;
-  role: RoleEntity;
+  apiKey: ApiKeyEntity | null;
+  merchant: MerchantEntity | null;
+  role: RoleEntity | null;
   permissions: PermissionEntity[];
+  authType: 'api_key' | 'jwt';
+  jwtPayload: JwtUserPayload | null;
 };
+
+export interface JwtUserPayload {
+  sub: string;
+  email: string;
+  preferred_username: string;
+  name?: string;
+  realm_access?: { roles: string[] };
+}
 
 export type AppContext = Context<{ Variables: AppVariables }>;
 

@@ -1,6 +1,10 @@
 import { IsArray, IsISO8601, IsNotEmpty, IsOptional, IsString, IsUrl, IsIP } from 'class-validator';
 
 export class CreateApiKeyDto {
+  @IsOptional()
+  @IsString()
+  merchant_id?: string;
+
   @IsNotEmpty({ message: 'role_id is required' })
   @IsString()
   role_id!: string;

@@ -12,6 +12,14 @@ interface CreateSessionData {
 }
 
 export class SessionService {
+  async findAll(): Promise<SessionEntity[]> {
+    return SessionRepository.find({ relations: ['merchant'], order: { created_at: 'DESC' } });
+  }
+
+  async findById(id: string): Promise<SessionEntity | null> {
+    return SessionRepository.findOne({ where: { id }, relations: ['merchant'] });
+  }
+
   async findByMerchant(merchantId: string): Promise<SessionEntity[]> {
     return SessionRepository.findBy({ merchant_id: merchantId });
   }

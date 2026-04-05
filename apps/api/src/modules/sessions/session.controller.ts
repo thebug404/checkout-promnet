@@ -142,7 +142,10 @@ export class SessionController {
 
   static async findById(c: AppContext) {
     const merchant = c.get('merchant');
-    const session = await sessionService.findByIdAndMerchant(c.req.param('id')!, merchant.id);
+    const id = c.req.param('id')!;
+    const session = merchant
+      ? await sessionService.findByIdAndMerchant(id, merchant.id)
+      : await sessionService.findById(id);
     if (!session) {
       return c.json({ error: 'Session not found' }, 404);
     }
@@ -162,12 +165,17 @@ export class SessionController {
 
   static async findAll(c: AppContext) {
     const merchant = c.get('merchant');
-    const allSessions = await sessionService.findByMerchant(merchant.id);
+    const allSessions = merchant
+      ? await sessionService.findByMerchant(merchant.id)
+      : await sessionService.findAll();
     const data = allSessions.map((s) => ({
       id: s.id,
       status: s.status,
+      merchant_id: s.merchant_id,
       expires_at: s.expires_at,
       created_at: s.created_at,
+      cybersource_payment_id: s.cybersource_payment_id,
+      cybersource_status: s.cybersource_status,
     }));
     return c.json({ data });
   }

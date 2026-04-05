@@ -3,6 +3,10 @@ import { PspCredentialEntity } from './psp-credential.entity.js';
 import { CreatePspCredentialDto, UpdatePspCredentialDto } from './psp-credential.dto.js';
 
 export class PspCredentialService {
+  async findAll(): Promise<PspCredentialEntity[]> {
+    return PspCredentialRepository.find({ relations: ['merchant'] });
+  }
+
   async findByMerchant(merchantId: string): Promise<PspCredentialEntity[]> {
     return PspCredentialRepository.findBy({ merchant_id: merchantId });
   }
@@ -34,6 +38,19 @@ export class PspCredentialService {
 
   async update(id: string, merchantId: string, dto: UpdatePspCredentialDto): Promise<PspCredentialEntity | null> {
     const credential = await PspCredentialRepository.findOneBy({ id, merchant_id: merchantId });
+    if (!credential) return null;
+
+    if (dto.credential_ref !== undefined) credential.credential_ref = dto.credential_ref ?? null;
+    if (dto.is_active !== undefined) credential.is_active = dto.is_active;
+    if (dto.cybersource_merchant_id !== undefined) credential.cybersource_merchant_id = dto.cybersource_merchant_id ?? null;
+    if (dto.cybersource_key_id !== undefined) credential.cybersource_key_id = dto.cybersource_key_id ?? null;
+    if (dto.cybersource_secret_key !== undefined) credential.cybersource_secret_key = dto.cybersource_secret_key ?? null;
+
+    return PspCredentialRepository.save(credential);
+  }
+
+  async updateById(id: string, dto: UpdatePspCredentialDto): Promise<PspCredentialEntity | null> {
+    const credential = await PspCredentialRepository.findOneBy({ id });
     if (!credential) return null;
 
     if (dto.credential_ref !== undefined) credential.credential_ref = dto.credential_ref ?? null;
