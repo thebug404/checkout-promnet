@@ -1,4 +1,5 @@
 import { IsArray, IsISO8601, IsNotEmpty, IsOptional, IsString, IsUrl, IsIP } from 'class-validator';
+import { environments } from '../../config/environments.js';
 
 export class CreateApiKeyDto {
   @IsOptional()
@@ -11,7 +12,12 @@ export class CreateApiKeyDto {
 
   @IsOptional()
   @IsArray()
-  @IsUrl({}, { each: true, message: 'Each entry in allowed_origins must be a valid URL' })
+  @IsUrl(
+    {
+      require_tld: environments.NODE_ENV === 'production', // Require TLD in production, allow localhost in development
+    },
+    { each: true, message: 'Each entry in allowed_origins must be a valid URL' }
+  )
   allowed_origins?: string[];
 
   @IsOptional()
