@@ -42,11 +42,7 @@ export function authMiddleware(): AppMiddleware {
  */
 async function authenticateJwt(token: string, c: any, next: () => Promise<void>) {
   try {
-    console.log('Authenticating JWT token:', token); // Debug log
-
     const userInfo = await getKeycloakUserinfo(token);
-
-    console.log('Keycloak userinfo:', userInfo); // Debug log
 
     const jwtPayload: JwtUserPayload = {
       sub: String(userInfo.sub),

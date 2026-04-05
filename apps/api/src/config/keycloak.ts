@@ -1,5 +1,5 @@
 import { environments } from './environments.js';
-import { Issuer, type Client, type UserinfoResponse } from 'openid-client';
+import { Issuer, type UserinfoResponse } from 'openid-client';
 
 const {
   KEYCLOAK_BASE_URL,
@@ -19,11 +19,5 @@ const authClient = new keycloakIssuer.Client({
 });
 
 export async function getKeycloakUserinfo(accessToken: string): Promise<UserinfoResponse> {
-  authClient.userinfo(accessToken).then(userinfo => {
-    console.log('Successfully retrieved userinfo from Keycloak:', userinfo);
-  }).catch(err => {
-    console.error('Error retrieving userinfo from Keycloak:', err);
-  });
-
   return authClient.userinfo(accessToken);
 }
