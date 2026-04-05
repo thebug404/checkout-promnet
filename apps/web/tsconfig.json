@@ -16,6 +16,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./app/*"],
+      "~/*": ["./app/*"],
       "@checkout-promnet/ui/*": ["../../packages/ui/src/*"]
     },
     "esModuleInterop": true,

@@ -11,16 +11,18 @@
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
+    "@checkout-promnet/ui": "*",
     "@hugeicons/core-free-icons": "^4.1.1",
     "@hugeicons/react": "^1.1.6",
     "@react-router/node": "7.12.0",
     "@react-router/serve": "7.12.0",
     "@remixicon/react": "^4.9.0",
-    "@checkout-promnet/ui": "*",
     "isbot": "^5.1.31",
+    "jose": "^6.2.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "react-router": "7.12.0"
+    "react-router": "7.12.0",
+    "remix-auth": "^4.2.0"
   },
   "devDependencies": {
     "@react-router/dev": "7.12.0",
