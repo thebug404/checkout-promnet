@@ -151,13 +151,14 @@ export default function AdminLayout() {
                       </div>
                     </div>
                     <DropdownMenuSeparator />
-                    <logoutFetcher.Form method="post" action="/logout">
-                      <DropdownMenuItem asChild>
-                        <button type="submit" className="w-full cursor-pointer">
-                          Cerrar sesión
-                        </button>
-                      </DropdownMenuItem>
-                    </logoutFetcher.Form>
+                    <DropdownMenuItem
+                      onSelect={() =>
+                        logoutFetcher.submit({}, { method: "post", action: "/logout" })
+                      }
+                      className="cursor-pointer"
+                    >
+                      Cerrar sesión
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </SidebarMenuItem>
