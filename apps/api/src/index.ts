@@ -5,6 +5,7 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 
 import { AppDataSource } from './database/data-source.js';
+import { seedExampleDataIfTablesEmpty } from './database/seed.js';
 import type { AppVariables } from './types.js';
 import { authMiddleware } from './middleware/auth.js';
 import { auditMiddleware } from './middleware/audit.js';
@@ -15,6 +16,7 @@ import roleRoutes from './modules/roles/role.routes.js';
 import pspCredentialRoutes from './modules/psp-credentials/psp-credential.routes.js';
 import sessionRoutes from './modules/sessions/session.routes.js';
 import auditLogRoutes from './modules/audit-logs/audit-log.routes.js';
+import { environments } from './config/environments.js';
 
 const app = new Hono();
 
@@ -59,8 +61,12 @@ const port = parseInt(process.env.PORT || '3000', 10);
 
 // Initialize database then start server
 AppDataSource.initialize()
-  .then(() => {
+  .then(async () => {
     console.log('📦 Database connected successfully');
+
+    if (environments.NODE_ENV === 'development') {
+      await seedExampleDataIfTablesEmpty(AppDataSource);
+    }
 
     serve({ fetch: app.fetch, port }, (info) => {
       console.log(`\n🚀 PUC API running on http://localhost:${info.port}`);

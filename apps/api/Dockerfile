@@ -15,9 +15,10 @@ COPY src/ ./src/
 COPY data/ ./data/
 
 # Copy and prepare entrypoint script
-COPY entrypoint.sh ./entrypoint.sh
-RUN chmod +x ./entrypoint.sh
+# COPY entrypoint.sh ./entrypoint.sh
+# RUN chmod +x ./entrypoint.sh
 
 EXPOSE 3000
 
-ENTRYPOINT ["./entrypoint.sh"]
+# ENTRYPOINT ["./entrypoint.sh"]
+CMD ["npm", "start"]
