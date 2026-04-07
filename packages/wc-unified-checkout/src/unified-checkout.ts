@@ -1,8 +1,6 @@
 import { LitElement, html, css, type PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 
-// ─── Types ──────────────────────────────────────────────────────────────────
-
 export type DisplayMode = 'embedded' | 'sidebar';
 
 export interface CheckoutReadyDetail {
@@ -85,8 +83,6 @@ declare global {
  */
 @customElement('unified-checkout')
 export class UnifiedCheckout extends LitElement {
-  // ─── Reactive Properties (HTML Attributes) ────────────────────────────────
-
   /** The capture context JWT returned by the server. */
   @property({ type: String, attribute: 'capture-context' })
   captureContext = '';
@@ -118,8 +114,6 @@ export class UnifiedCheckout extends LitElement {
   @property({ type: Boolean, attribute: 'auto-launch' })
   autoLaunch = true;
 
-  // ─── Internal State ───────────────────────────────────────────────────────
-
   @state() private _loading = false;
   @state() private _error: string | null = null;
 
@@ -130,8 +124,6 @@ export class UnifiedCheckout extends LitElement {
 
   /** Unique suffix so multiple instances don't clash on IDs. */
   private _uid = Math.random().toString(36).slice(2, 8);
-
-  // ─── Styles ───────────────────────────────────────────────────────────────
 
   static override styles = css`
     :host {
@@ -184,8 +176,6 @@ export class UnifiedCheckout extends LitElement {
     }
   `;
 
-  // ─── Lifecycle ────────────────────────────────────────────────────────────
-
   override updated(changed: PropertyValues): void {
     super.updated(changed);
 
@@ -204,8 +194,6 @@ export class UnifiedCheckout extends LitElement {
     super.disconnectedCallback();
     this._teardown();
   }
-
-  // ─── Public Methods ───────────────────────────────────────────────────────
 
   /**
    * Starts (or re-starts) the Unified Checkout flow.
@@ -306,8 +294,6 @@ export class UnifiedCheckout extends LitElement {
     this._launched = false;
   }
 
-  // ─── Render ───────────────────────────────────────────────────────────────
-
   override render() {
     return html`
       ${this._error ? html`<div class="error-banner" part="error">${this._error}</div>` : ''}
@@ -325,8 +311,6 @@ export class UnifiedCheckout extends LitElement {
       <slot></slot>
     `;
   }
-
-  // ─── Private Helpers ──────────────────────────────────────────────────────
 
   private async _loadScript(): Promise<void> {
     if (typeof window.Accept !== 'undefined') return;
