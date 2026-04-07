@@ -194,6 +194,7 @@ Puedes personalizar estilos desde afuera del componente:
 | `--uc-spinner-size` | 40px | Tamaño del spinner. |
 | `--uc-button-gap` | 8px | Separación entre botones de pago. |
 | `--uc-payment-screen-margin-top` | 16px | Margen superior de la pantalla de pago. |
+| `--uc-padding` | 8px | Padding del host. |
 
 Ejemplo:
 

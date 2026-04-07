@@ -131,6 +131,7 @@ export class UnifiedCheckout extends LitElement {
       min-height: var(--uc-min-height, auto);
       border-radius: var(--uc-border-radius, 8px);
       background: var(--uc-bg, #fff);
+      padding: var(--uc-padding, 8px);
       position: relative;
     }
 
