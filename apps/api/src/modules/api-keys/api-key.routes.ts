@@ -10,5 +10,6 @@ apiKeyRoutes.get('/:id', requirePermission('api_keys', 'read'), ApiKeyController
 apiKeyRoutes.post('/', requirePermission('api_keys', 'create'), ApiKeyController.create);
 apiKeyRoutes.patch('/:id', requirePermission('api_keys', 'create'), ApiKeyController.update);
 apiKeyRoutes.post('/:id/revoke', requirePermission('api_keys', 'revoke'), ApiKeyController.revoke);
+apiKeyRoutes.delete('/:id', requirePermission('api_keys', 'delete'), ApiKeyController.delete);
 
 export default apiKeyRoutes;

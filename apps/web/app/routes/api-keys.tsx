@@ -136,6 +136,17 @@ export async function action({ request }: Route.ActionArgs) {
     }
   }
 
+  if (intent === "delete") {
+    const id = formData.get("id")
+    const merchantId = formData.get("merchant_id") as string
+    try {
+      await apiClient.delete(`/merchants/${merchantId}/api-keys/${id}`, user)
+      return { success: true, rawKey: null, error: null }
+    } catch (e) {
+      return { success: false, rawKey: null, error: e instanceof Error ? e.message : "Error al eliminar" }
+    }
+  }
+
   return { success: false, rawKey: null, error: "Acción no válida" }
 }
 
@@ -238,6 +249,12 @@ export default function ApiKeysPage() {
         </div>
       )}
 
+      {actionData?.success && !actionData?.rawKey && (
+        <div className="rounded-lg border border-primary/50 bg-primary/10 p-3 text-sm text-primary">
+          Operación realizada exitosamente
+        </div>
+      )}
+
       {(error || actionData?.error) && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
           {error || actionData?.error}
@@ -299,6 +316,31 @@ export default function ApiKeysPage() {
                           <Form method="post">
                             <input type="hidden" name="intent" value="revoke" />
                             <input type="hidden" name="id" value={key.id} />
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                              Eliminar
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>¿Eliminar API Key?</DialogTitle>
+                              <DialogDescription>
+                                Esta acción no se puede deshacer. Se eliminará permanentemente la API Key con prefijo "{key.key_prefix}".
+                              </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter>
+                              <Form method="post">
+                                <input type="hidden" name="intent" value="delete" />
+                                <input type="hidden" name="id" value={key.id} />
+                                <input type="hidden" name="merchant_id" value={key.merchant_id} />
+                                <Button variant="destructive" type="submit">
+                                  Eliminar
+                                </Button>
+                              </Form>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
                             <input type="hidden" name="merchant_id" value={key.merchant_id} />
                             <Button variant="ghost" size="sm" type="submit">
                               Revocar

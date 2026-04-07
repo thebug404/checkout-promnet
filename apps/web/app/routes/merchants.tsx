@@ -155,6 +155,12 @@ export default function MerchantsPage() {
         </Dialog>
       </div>
 
+      {actionData?.success && (
+        <div className="rounded-lg border border-primary/50 bg-primary/10 p-3 text-sm text-primary">
+          Operación realizada exitosamente
+        </div>
+      )}
+
       {(error || actionData?.error) && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
           {error || actionData?.error}
@@ -202,8 +208,9 @@ export default function MerchantsPage() {
                         </Button>
                         {m.status === "active" ? (
                           <Form method="post">
-                            <input type="hidden" name="intent" value="delete" />
+                            <input type="hidden" name="intent" value="update" />
                             <input type="hidden" name="id" value={m.id} />
+                            <input type="hidden" name="status" value="inactive" />
                             <Button variant="ghost" size="sm" type="submit">
                               Desactivar
                             </Button>
@@ -218,6 +225,30 @@ export default function MerchantsPage() {
                             </Button>
                           </Form>
                         )}
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                              Eliminar
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>¿Eliminar comercio?</DialogTitle>
+                              <DialogDescription>
+                                Esta acción no se puede deshacer. Se eliminará permanentemente el comercio "{m.name}".
+                              </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter>
+                              <Form method="post">
+                                <input type="hidden" name="intent" value="delete" />
+                                <input type="hidden" name="id" value={m.id} />
+                                <Button variant="destructive" type="submit">
+                                  Eliminar
+                                </Button>
+                              </Form>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
                       </div>
                     </TableCell>
                   </TableRow>

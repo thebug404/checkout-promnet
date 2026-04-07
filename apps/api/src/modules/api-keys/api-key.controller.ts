@@ -74,4 +74,25 @@ export class ApiKeyController {
     }
     return c.json({ message: 'API key revoked' });
   }
+
+  static async delete(c: AppContext) {
+    try {
+      const merchantId = c.req.param('merchantId')!;
+      const success = await apiKeyService.delete(c.req.param('id')!, merchantId);
+      if (!success) {
+        return c.json({ error: 'API key not found' }, 404);
+      }
+      return c.json({ message: 'API Key eliminada correctamente' });
+    } catch (e: any) {
+      // Manejar error de violación de restricción de clave foránea
+      if (e.code === '23503') {
+        return c.json({ 
+          error: 'No se puede eliminar la API Key porque tiene registros asociados. Elimina primero todos los registros relacionados.'
+        }, 409);
+      }
+      
+      console.error('Error deleting API key:', e);
+      return c.json({ error: 'Error al eliminar la API Key' }, 500);
+    }
+  }
 }

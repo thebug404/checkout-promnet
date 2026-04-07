@@ -19,9 +19,11 @@ const permissionData: Array<Pick<PermissionEntity, 'resource' | 'action'>> = [
   { resource: 'api_keys', action: 'create' },
   { resource: 'api_keys', action: 'read' },
   { resource: 'api_keys', action: 'revoke' },
+  { resource: 'api_keys', action: 'delete' },
   { resource: 'psp_credentials', action: 'create' },
   { resource: 'psp_credentials', action: 'read' },
   { resource: 'psp_credentials', action: 'update' },
+  { resource: 'psp_credentials', action: 'delete' },
   { resource: 'audit_logs', action: 'read' },
 ];
 

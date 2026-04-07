@@ -104,6 +104,14 @@ export class ApiKeyService {
     return true;
   }
 
+  async delete(id: string, merchantId: string): Promise<boolean> {
+    const apiKey = await ApiKeyRepository.findOneBy({ id, merchant_id: merchantId });
+    if (!apiKey) return false;
+    
+    await ApiKeyRepository.remove(apiKey);
+    return true;
+  }
+
   async updateLastUsed(id: string): Promise<void> {
     await ApiKeyRepository.update(id, { last_used_at: new Date() });
   }

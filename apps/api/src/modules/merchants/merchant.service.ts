@@ -43,4 +43,12 @@ export class MerchantService {
     merchant.status = 'inactive';
     return MerchantRepository.save(merchant);
   }
+
+  async delete(id: string): Promise<boolean> {
+    const merchant = await MerchantRepository.findOneBy({ id });
+    if (!merchant) return false;
+    
+    await MerchantRepository.remove(merchant);
+    return true;
+  }
 }

@@ -49,4 +49,25 @@ export class PspCredentialController {
     const { cybersource_secret_key, ...safe } = updated;
     return c.json({ data: { ...safe, cybersource_secret_key: cybersource_secret_key ? '***' : null } });
   }
+
+  static async delete(c: AppContext) {
+    try {
+      const merchantId = c.req.param('merchantId')!;
+      const success = await pspCredentialService.delete(c.req.param('id')!, merchantId);
+      if (!success) {
+        return c.json({ error: 'PSP credential not found' }, 404);
+      }
+      return c.json({ message: 'Credencial PSP eliminada correctamente' });
+    } catch (e: any) {
+      // Manejar error de violación de restricción de clave foránea
+      if (e.code === '23503') {
+        return c.json({ 
+          error: 'No se puede eliminar la credencial PSP porque tiene registros asociados. Elimina primero todos los registros relacionados.'
+        }, 409);
+      }
+      
+      console.error('Error deleting PSP credential:', e);
+      return c.json({ error: 'Error al eliminar la credencial PSP' }, 500);
+    }
+  }
 }

@@ -61,10 +61,30 @@ export class MerchantController {
   }
 
   static async delete(c: AppContext) {
-    const updated = await merchantService.deactivate(c.req.param('id')!);
-    if (!updated) {
-      return c.json({ error: 'Merchant not found' }, 404);
+    try {
+      const success = await merchantService.delete(c.req.param('id')!);
+      if (!success) {
+        return c.json({ error: 'Merchant not found' }, 404);
+      }
+      return c.json({ message: 'Comercio eliminado correctamente' });
+    } catch (e: any) {
+      // Manejar error de violación de restricción de clave foránea
+      if (e.code === '23503') {
+        const constraintName = e.constraint || '';
+        let message = 'No se puede eliminar el comercio porque tiene registros asociados';
+        
+        if (constraintName.includes('api_keys')) {
+          message = 'No se puede eliminar el comercio porque tiene API Keys asociadas. Elimina primero todas las API Keys de este comercio.';
+        } else if (constraintName.includes('psp_credentials')) {
+          message = 'No se puede eliminar el comercio porque tiene credenciales PSP asociadas. Elimina primero todas las credenciales de este comercio.';
+        }
+        
+        return c.json({ error: message }, 409);
+      }
+      
+      // Error genérico
+      console.error('Error deleting merchant:', e);
+      return c.json({ error: 'Error al eliminar el comercio' }, 500);
     }
-    return c.json({ message: 'Merchant deactivated' });
   }
 }

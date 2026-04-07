@@ -61,4 +61,12 @@ export class PspCredentialService {
 
     return PspCredentialRepository.save(credential);
   }
+
+  async delete(id: string, merchantId: string): Promise<boolean> {
+    const credential = await PspCredentialRepository.findOneBy({ id, merchant_id: merchantId });
+    if (!credential) return false;
+    
+    await PspCredentialRepository.remove(credential);
+    return true;
+  }
 }

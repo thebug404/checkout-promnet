@@ -113,6 +113,20 @@ export async function action({ request }: Route.ActionArgs) {
     }
   }
 
+  if (intent === "delete") {
+    const id = formData.get("id")
+    const merchantId = formData.get("merchant_id") as string
+    try {
+      await apiClient.delete(`/merchants/${merchantId}/psp-credentials/${id}`, user)
+      return { success: true, error: null }
+    } catch (e) {
+      return {
+        success: false,
+        error: e instanceof Error ? e.message : "Error al eliminar",
+      }
+    }
+  }
+
   return { success: false, error: "Acción no válida" }
 }
 
@@ -204,6 +218,12 @@ export default function PspCredentialsPage() {
         </Dialog>
       </div>
 
+      {actionData?.success && (
+        <div className="rounded-lg border border-primary/50 bg-primary/10 p-3 text-sm text-primary">
+          Operación realizada exitosamente
+        </div>
+      )}
+
       {(error || actionData?.error) && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
           {error || actionData?.error}
@@ -266,6 +286,31 @@ export default function PspCredentialsPage() {
                         <Form method="post">
                           <input type="hidden" name="intent" value="toggle" />
                           <input type="hidden" name="id" value={c.id} />
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                              Eliminar
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>¿Eliminar credencial PSP?</DialogTitle>
+                              <DialogDescription>
+                                Esta acción no se puede deshacer. Se eliminará permanentemente la credencial de {c.psp_name} para el comercio.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter>
+                              <Form method="post">
+                                <input type="hidden" name="intent" value="delete" />
+                                <input type="hidden" name="id" value={c.id} />
+                                <input type="hidden" name="merchant_id" value={c.merchant_id} />
+                                <Button variant="destructive" type="submit">
+                                  Eliminar
+                                </Button>
+                              </Form>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
                           <input type="hidden" name="is_active" value={String(c.is_active)} />
                           <input type="hidden" name="merchant_id" value={c.merchant_id} />
                           <Button variant="ghost" size="sm" type="submit">
