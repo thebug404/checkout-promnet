@@ -75,7 +75,17 @@ export async function loader({ request }: Route.LoaderArgs) {
         apiClient.get<{ data: ApiKey[] }>(`/merchants/${m.id}/api-keys`, user).catch(() => ({ data: [] as ApiKey[] }))
       )
     )
-    const apiKeys = apiKeyResults.flatMap((r) => r.data)
+    const merchantsById = new Map(merchantsRes.data.map((merchant) => [merchant.id, merchant]))
+    const rolesById = new Map(rolesRes.data.map((role) => [role.id, role]))
+
+    const apiKeys = apiKeyResults
+      .flatMap((r) => r.data)
+      .map((apiKey) => ({
+        ...apiKey,
+        merchant: merchantsById.get(apiKey.merchant_id),
+        role: rolesById.get(apiKey.role_id),
+      }))
+
     return { apiKeys, roles: rolesRes.data, merchants: merchantsRes.data, error: null }
   } catch (e) {
     return {
