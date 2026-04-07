@@ -1,4 +1,4 @@
-import { useLoaderData, useNavigate, Form, useActionData } from "react-router"
+import { useLoaderData, Form, Link, useActionData } from "react-router"
 import type { Route } from "./+types/merchants"
 import { requireAuth } from "~/services/auth-helpers.server"
 import { apiClient } from "~/services/api-client.server"
@@ -205,6 +205,9 @@ export default function MerchantsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link to={`/merchants/${m.id}/edit`}>Editar</Link>
+                        </Button>
                         {m.status === "active" ? (
                           <Form method="post">
                             <input type="hidden" name="intent" value="delete" />

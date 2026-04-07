@@ -19,6 +19,8 @@ interface DashboardData {
 
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await requireAuth(request)
+  const url = new URL(request.url)
+  const notice = url.searchParams.get("notice")
 
   let data: DashboardData = {
     merchants: { total: 0 },
@@ -28,22 +30,37 @@ export async function loader({ request }: Route.LoaderArgs) {
   }
 
   try {
-    const [merchants, apiKeys, sessions, auditLogs] = await Promise.allSettled([
-      apiClient.get<{ data: unknown[] }>("/merchants", user),
-      apiClient.get<{ data: unknown[] }>("/api-keys", user),
-      apiClient.get<{ data: unknown[] }>("/sessions", user),
-      apiClient.get<{ data: unknown[]; meta: { total: number } }>("/audit-logs?limit=1", user),
-    ])
+    const merchantsRes = await apiClient.get<{ data: { id: string }[] }>("/merchants", user).catch(() => ({ data: [] as { id: string }[] }))
+    data.merchants.total = merchantsRes.data.length
 
-    if (merchants.status === "fulfilled") data.merchants.total = merchants.value.data.length
-    if (apiKeys.status === "fulfilled") data.apiKeys.total = apiKeys.value.data.length
-    if (sessions.status === "fulfilled") data.sessions.total = sessions.value.data.length
-    if (auditLogs.status === "fulfilled") data.auditLogs.total = auditLogs.value.meta.total
+    const perMerchant = await Promise.all(
+      merchantsRes.data.map(async (m) => {
+        const [ak, s, al] = await Promise.allSettled([
+          apiClient.get<{ data: unknown[] }>(`/merchants/${m.id}/api-keys`, user),
+          apiClient.get<{ data: unknown[] }>(`/merchants/${m.id}/sessions`, user),
+          apiClient.get<{ data: unknown[]; meta: { total: number } }>(`/merchants/${m.id}/audit-logs?limit=1`, user),
+        ])
+        return {
+          apiKeys: ak.status === "fulfilled" ? ak.value.data.length : 0,
+          sessions: s.status === "fulfilled" ? s.value.data.length : 0,
+          auditLogs: al.status === "fulfilled" ? al.value.meta.total : 0,
+        }
+      })
+    )
+
+    for (const pm of perMerchant) {
+      data.apiKeys.total += pm.apiKeys
+      data.sessions.total += pm.sessions
+      data.auditLogs.total += pm.auditLogs
+    }
   } catch {
     // API may not be available yet
   }
 
-  return { data }
+  return {
+    data,
+    notice: notice === "api-key-updated" ? "API Key actualizada correctamente." : null,
+  }
 }
 
 const stats = [
@@ -54,10 +71,15 @@ const stats = [
 ] as const
 
 export default function DashboardPage() {
-  const { data } = useLoaderData<typeof loader>()
+  const { data, notice } = useLoaderData<typeof loader>()
 
   return (
     <div className="space-y-6">
+      {notice && (
+        <div className="rounded-lg border border-emerald-500/50 bg-emerald-500/10 p-3 text-sm text-emerald-700">
+          {notice}
+        </div>
+      )}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground">

@@ -1,4 +1,4 @@
-import { useLoaderData, Form, useActionData } from "react-router"
+import { useLoaderData, Form, Link, useActionData } from "react-router"
 import type { Route } from "./+types/api-keys"
 import { requireAuth } from "~/services/auth-helpers.server"
 import { apiClient } from "~/services/api-client.server"
@@ -66,12 +66,17 @@ interface Merchant {
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await requireAuth(request)
   try {
-    const [apiKeysRes, rolesRes, merchantsRes] = await Promise.all([
-      apiClient.get<{ data: ApiKey[] }>("/api-keys", user),
+    const [rolesRes, merchantsRes] = await Promise.all([
       apiClient.get<{ data: Role[] }>("/roles", user),
       apiClient.get<{ data: Merchant[] }>("/merchants", user),
     ])
-    return { apiKeys: apiKeysRes.data, roles: rolesRes.data, merchants: merchantsRes.data, error: null }
+    const apiKeyResults = await Promise.all(
+      merchantsRes.data.map((m) =>
+        apiClient.get<{ data: ApiKey[] }>(`/merchants/${m.id}/api-keys`, user).catch(() => ({ data: [] as ApiKey[] }))
+      )
+    )
+    const apiKeys = apiKeyResults.flatMap((r) => r.data)
+    return { apiKeys, roles: rolesRes.data, merchants: merchantsRes.data, error: null }
   } catch (e) {
     return {
       apiKeys: [],
@@ -90,9 +95,9 @@ export async function action({ request }: Route.ActionArgs) {
   if (intent === "create") {
     const originsRaw = (formData.get("allowed_origins") as string) || ""
     const ipRaw = (formData.get("ip_whitelist") as string) || ""
+    const merchantId = formData.get("merchant_id") as string
     try {
-      const result = await apiClient.post<{ data: ApiKey; key: string; warning: string }>("/api-keys", user, {
-        merchant_id: formData.get("merchant_id"),
+      const result = await apiClient.post<{ data: ApiKey; key: string; warning: string }>(`/merchants/${merchantId}/api-keys`, user, {
         role_id: formData.get("role_id"),
         allowed_origins: originsRaw
           .split("\n")
@@ -112,8 +117,9 @@ export async function action({ request }: Route.ActionArgs) {
 
   if (intent === "revoke") {
     const id = formData.get("id")
+    const merchantId = formData.get("merchant_id") as string
     try {
-      await apiClient.post(`/api-keys/${id}/revoke`, user)
+      await apiClient.post(`/merchants/${merchantId}/api-keys/${id}/revoke`, user)
       return { success: true, rawKey: null, error: null }
     } catch (e) {
       return { success: false, rawKey: null, error: e instanceof Error ? e.message : "Error al revocar" }
@@ -275,15 +281,21 @@ export default function ApiKeysPage() {
                         : "Nunca"}
                     </TableCell>
                     <TableCell className="text-right">
-                      {key.is_active && (
-                        <Form method="post">
-                          <input type="hidden" name="intent" value="revoke" />
-                          <input type="hidden" name="id" value={key.id} />
-                          <Button variant="ghost" size="sm" type="submit">
-                            Revocar
-                          </Button>
-                        </Form>
-                      )}
+                      <div className="flex items-center justify-end gap-2">
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link to={`/api-keys/${key.id}/edit?merchantId=${key.merchant_id}`}>Editar</Link>
+                        </Button>
+                        {key.is_active && (
+                          <Form method="post">
+                            <input type="hidden" name="intent" value="revoke" />
+                            <input type="hidden" name="id" value={key.id} />
+                            <input type="hidden" name="merchant_id" value={key.merchant_id} />
+                            <Button variant="ghost" size="sm" type="submit">
+                              Revocar
+                            </Button>
+                          </Form>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))

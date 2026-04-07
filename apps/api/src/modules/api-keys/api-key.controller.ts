@@ -7,20 +7,16 @@ const apiKeyService = new ApiKeyService();
 
 export class ApiKeyController {
   static async findAll(c: AppContext) {
-    const merchant = c.get('merchant');
-    const keys = merchant
-      ? await apiKeyService.findByMerchant(merchant.id)
-      : await apiKeyService.findAll();
+    const merchantId = c.req.param('merchantId')!;
+    const keys = await apiKeyService.findByMerchant(merchantId);
     const safe = keys.map(({ key_hash: _kh, ...rest }) => rest);
     return c.json({ data: safe });
   }
 
   static async findById(c: AppContext) {
-    const merchant = c.get('merchant');
+    const merchantId = c.req.param('merchantId')!;
     const id = c.req.param('id')!;
-    const key = merchant
-      ? await apiKeyService.findByIdAndMerchant(id, merchant.id)
-      : await apiKeyService.findByIdWithRelations(id);
+    const key = await apiKeyService.findByIdAndMerchant(id, merchantId);
     if (!key) {
       return c.json({ error: 'API key not found' }, 404);
     }
@@ -37,11 +33,7 @@ export class ApiKeyController {
     }
 
     const dto = body as CreateApiKeyDto;
-    const merchant = c.get('merchant');
-    const merchantId = dto.merchant_id ?? merchant?.id;
-    if (!merchantId) {
-      return c.json({ error: 'merchant_id is required' }, 400);
-    }
+    const merchantId = c.req.param('merchantId')!;
 
     const result = await apiKeyService.create(dto, merchantId);
     if (!result) {
@@ -64,10 +56,8 @@ export class ApiKeyController {
       return c.json({ error: 'Validation failed', details: errors }, 400);
     }
 
-    const merchant = c.get('merchant');
-    const updated = merchant
-      ? await apiKeyService.update(c.req.param('id')!, merchant.id, body as UpdateApiKeyDto)
-      : await apiKeyService.updateById(c.req.param('id')!, body as UpdateApiKeyDto);
+    const merchantId = c.req.param('merchantId')!;
+    const updated = await apiKeyService.update(c.req.param('id')!, merchantId, body as UpdateApiKeyDto);
     if (!updated) {
       return c.json({ error: 'API key not found' }, 404);
     }
@@ -77,10 +67,8 @@ export class ApiKeyController {
   }
 
   static async revoke(c: AppContext) {
-    const merchant = c.get('merchant');
-    const success = merchant
-      ? await apiKeyService.revoke(c.req.param('id')!, merchant.id)
-      : await apiKeyService.revokeById(c.req.param('id')!);
+    const merchantId = c.req.param('merchantId')!;
+    const success = await apiKeyService.revoke(c.req.param('id')!, merchantId);
     if (!success) {
       return c.json({ error: 'API key not found' }, 404);
     }

@@ -32,8 +32,14 @@ interface Session {
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await requireAuth(request)
   try {
-    const response = await apiClient.get<{ data: Session[] }>("/sessions", user)
-    return { sessions: response.data, error: null }
+    const merchantsRes = await apiClient.get<{ data: { id: string }[] }>("/merchants", user)
+    const sessionResults = await Promise.all(
+      merchantsRes.data.map((m) =>
+        apiClient.get<{ data: Session[] }>(`/merchants/${m.id}/sessions`, user).catch(() => ({ data: [] as Session[] }))
+      )
+    )
+    const sessions = sessionResults.flatMap((r) => r.data)
+    return { sessions, error: null }
   } catch (e) {
     return {
       sessions: [],

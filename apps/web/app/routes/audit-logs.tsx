@@ -43,11 +43,18 @@ export async function loader({ request }: Route.LoaderArgs) {
   const limit = url.searchParams.get("limit") ?? "50"
 
   try {
-    const result = await apiClient.get<AuditLogResponse>(
-      `/audit-logs?page=${page}&limit=${limit}`,
-      user,
+    const merchantsRes = await apiClient.get<{ data: { id: string }[] }>("/merchants", user)
+    const auditResults = await Promise.all(
+      merchantsRes.data.map((m) =>
+        apiClient.get<AuditLogResponse>(
+          `/merchants/${m.id}/audit-logs?page=${page}&limit=${limit}`,
+          user,
+        ).catch(() => ({ data: [] as AuditLog[], meta: { total: 0, page: 1, limit: 50, pages: 0 } }))
+      )
     )
-    return { logs: result.data, total: result.meta.total, page: Number(page), limit: Number(limit), error: null }
+    const logs = auditResults.flatMap((r) => r.data)
+    const total = auditResults.reduce((sum, r) => sum + r.meta.total, 0)
+    return { logs, total, page: Number(page), limit: Number(limit), error: null }
   } catch (e) {
     return {
       logs: [],

@@ -35,11 +35,11 @@ api.use('*', authMiddleware());
 api.use('*', auditMiddleware());
 
 api.route('/merchants', merchantRoutes);
-api.route('/api-keys', apiKeyRoutes);
+api.route('/merchants/:merchantId/api-keys', apiKeyRoutes);
 api.route('/roles', roleRoutes);
-api.route('/psp-credentials', pspCredentialRoutes);
-api.route('/sessions', sessionRoutes);
-api.route('/audit-logs', auditLogRoutes);
+api.route('/merchants/:merchantId/psp-credentials', pspCredentialRoutes);
+api.route('/merchants/:merchantId/sessions', sessionRoutes);
+api.route('/merchants/:merchantId/audit-logs', auditLogRoutes);
 
 app.route('/v1', api);
 

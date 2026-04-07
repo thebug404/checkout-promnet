@@ -3,8 +3,8 @@ const API_BASE = '/v1';
 /**
  * Create a CyberSource Unified Checkout session via the backend API.
  */
-export async function createSession(apiKey, sessionData) {
-  const res = await fetch(`${API_BASE}/sessions`, {
+export async function createSession(apiKey, merchantId, sessionData) {
+  const res = await fetch(`${API_BASE}/merchants/${merchantId}/sessions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -24,8 +24,8 @@ export async function createSession(apiKey, sessionData) {
 /**
  * Process a payment using the transient token from Unified Checkout.
  */
-export async function processPayment(apiKey, sessionId, transientToken, referenceCode) {
-  const res = await fetch(`${API_BASE}/sessions/${sessionId}/payment`, {
+export async function processPayment(apiKey, merchantId, sessionId, transientToken, referenceCode) {
+  const res = await fetch(`${API_BASE}/merchants/${merchantId}/sessions/${sessionId}/payment`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -75,7 +75,7 @@ function buildSessionPayload(body: CreateSessionDto) {
 export class SessionController {
   static async create(c: AppContext) {
     const body = await c.req.json();
-    const merchant = c.get('merchant');
+    const merchantId = c.req.param('merchantId')!;
     const apiKey = c.get('apiKey');
 
     const createSessionDto = plainToInstance(CreateSessionDto, body);
@@ -92,7 +92,7 @@ export class SessionController {
 
     const paymentPayload = buildSessionPayload(createSessionDto);
 
-    const pspCred = await pspCredentialService.findActiveCybersource(merchant.id);
+    const pspCred = await pspCredentialService.findActiveCybersource(merchantId);
     if (!pspCred || !pspCred.cybersource_merchant_id) {
       return c.json({ error: 'No active CyberSource PSP credentials configured for this merchant' }, 422);
     }
@@ -114,8 +114,8 @@ export class SessionController {
     const clientLibraryIntegrity = ctx[0]?.data?.clientLibraryIntegrity ?? null;
 
     const session = await sessionService.create({
-      api_key_id: apiKey.id,
-      merchant_id: merchant.id,
+      api_key_id: apiKey?.id ?? '',
+      merchant_id: merchantId,
       capture_context: captureContext,
       status: 'CREATED',
       payment_payload: paymentPayload,
@@ -141,11 +141,9 @@ export class SessionController {
   }
 
   static async findById(c: AppContext) {
-    const merchant = c.get('merchant');
+    const merchantId = c.req.param('merchantId')!;
     const id = c.req.param('id')!;
-    const session = merchant
-      ? await sessionService.findByIdAndMerchant(id, merchant.id)
-      : await sessionService.findById(id);
+    const session = await sessionService.findByIdAndMerchant(id, merchantId);
     if (!session) {
       return c.json({ error: 'Session not found' }, 404);
     }
@@ -164,10 +162,8 @@ export class SessionController {
   }
 
   static async findAll(c: AppContext) {
-    const merchant = c.get('merchant');
-    const allSessions = merchant
-      ? await sessionService.findByMerchant(merchant.id)
-      : await sessionService.findAll();
+    const merchantId = c.req.param('merchantId')!;
+    const allSessions = await sessionService.findByMerchant(merchantId);
     const data = allSessions.map((s) => ({
       id: s.id,
       status: s.status,
@@ -182,7 +178,7 @@ export class SessionController {
 
   static async processPayment(c: AppContext) {
     const id = c.req.param('id')!;
-    const merchant = c.get('merchant');
+    const merchantId = c.req.param('merchantId')!;
     const body = await c.req.json();
 
     const errors = await validateDto(ProcessPaymentDto, body);
@@ -192,7 +188,7 @@ export class SessionController {
 
     const dto = body as ProcessPaymentDto;
 
-    const session = await sessionService.findByIdAndMerchant(id, merchant.id);
+    const session = await sessionService.findByIdAndMerchant(id, merchantId);
     if (!session) {
       return c.json({ error: 'Session not found' }, 404);
     }
@@ -201,7 +197,7 @@ export class SessionController {
       return c.json({ error: `Session cannot be processed. Current status: ${session.status}` }, 409);
     }
 
-    const pspCred = await pspCredentialService.findActiveCybersource(merchant.id);
+    const pspCred = await pspCredentialService.findActiveCybersource(merchantId);
     if (!pspCred || !pspCred.cybersource_merchant_id) {
       return c.json({ error: 'No active CyberSource credentials' }, 422);
     }
@@ -233,7 +229,7 @@ export class SessionController {
         status,
         cybersource_payment_id: paymentResult.id,
         cybersource_status: paymentResult.status,
-        merchant_id: merchant.id,
+        merchant_id: merchantId,
         completed_at: new Date().toISOString(),
       };
       const signature = signPayload(callbackPayload, session.id);
@@ -255,7 +251,7 @@ export class SessionController {
 
   static async complete(c: AppContext) {
     const id = c.req.param('id')!;
-    const merchant = c.get('merchant');
+    const merchantId = c.req.param('merchantId')!;
     const body = await c.req.json();
 
     const errors = await validateDto(CompleteSessionDto, body);
@@ -265,7 +261,7 @@ export class SessionController {
 
     const dto = body as CompleteSessionDto;
 
-    const session = await sessionService.findByIdAndMerchant(id, merchant.id);
+    const session = await sessionService.findByIdAndMerchant(id, merchantId);
     if (!session) {
       return c.json({ error: 'Session not found' }, 404);
     }
@@ -281,7 +277,7 @@ export class SessionController {
       const callbackPayload = {
         session_id: session.id,
         status,
-        merchant_id: merchant.id,
+        merchant_id: merchantId,
         completed_at: new Date().toISOString(),
       };
       const signature = signPayload(callbackPayload, session.id);

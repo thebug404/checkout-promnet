@@ -28,6 +28,7 @@ function Field({ id, label, type = 'text', form, setFn, ...rest }) {
 
 const DEFAULTS = {
   apiKey: '',
+  merchantId: '',
   clientVersion: '0.19',
   allowedCardNetworks: 'VISA,MASTERCARD,AMEX,DISCOVER,JCB,DINERSCLUB',
   allowedPaymentTypes: 'PANENTRY,CLICKTOPAY,GOOGLEPAY',
@@ -97,6 +98,10 @@ export default function App() {
       setError('API Key is required');
       return;
     }
+    if (!form.merchantId.trim()) {
+      setError('Merchant ID is required');
+      return;
+    }
 
     try {
       const origin = window.location.origin;
@@ -151,7 +156,7 @@ export default function App() {
         },
       };
 
-      const res = await createSession(form.apiKey, payload);
+      const res = await createSession(form.apiKey, form.merchantId, payload);
       setSessionData(res.data);
       setStep(STEPS.CHECKOUT);
     } catch (err) {
@@ -173,6 +178,7 @@ export default function App() {
 
         const res = await processPayment(
           form.apiKey,
+          form.merchantId,
           sessionData.id,
           token,
           `REF-${Date.now()}`
@@ -184,7 +190,7 @@ export default function App() {
         setStep(STEPS.RESULT);
       }
     },
-    [form.apiKey, sessionData]
+    [form.apiKey, form.merchantId, sessionData]
   );
 
   const handleCheckoutError = useCallback((err) => {
@@ -223,7 +229,21 @@ export default function App() {
                   placeholder="puc_live_xxxxxxxx_..."
                   required
                 />
-                <small>The raw API key generated during seed or via POST /v1/api-keys</small>
+                <small>The raw API key generated during seed or via the admin panel</small>
+              </div>
+
+              {/* Merchant ID */}
+              <div className="form-group">
+                <label htmlFor="merchantId">Merchant ID</label>
+                <input
+                  id="merchantId"
+                  type="text"
+                  value={form.merchantId}
+                  onChange={set('merchantId')}
+                  placeholder="uuid-of-the-merchant"
+                  required
+                />
+                <small>The UUID of the merchant associated with the API key</small>
               </div>
 
               {/* Session params */}

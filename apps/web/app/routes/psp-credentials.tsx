@@ -1,4 +1,4 @@
-import { useLoaderData, Form, useActionData } from "react-router"
+import { useLoaderData, Form, Link, useActionData } from "react-router"
 import type { Route } from "./+types/psp-credentials"
 import { requireAuth } from "~/services/auth-helpers.server"
 import { apiClient } from "~/services/api-client.server"
@@ -56,11 +56,14 @@ interface Merchant {
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await requireAuth(request)
   try {
-    const [credentialsRes, merchantsRes] = await Promise.all([
-      apiClient.get<{ data: PspCredential[] }>("/psp-credentials", user),
-      apiClient.get<{ data: Merchant[] }>("/merchants", user),
-    ])
-    return { credentials: credentialsRes.data, merchants: merchantsRes.data, error: null }
+    const merchantsRes = await apiClient.get<{ data: Merchant[] }>("/merchants", user)
+    const credResults = await Promise.all(
+      merchantsRes.data.map((m) =>
+        apiClient.get<{ data: PspCredential[] }>(`/merchants/${m.id}/psp-credentials`, user).catch(() => ({ data: [] as PspCredential[] }))
+      )
+    )
+    const credentials = credResults.flatMap((r) => r.data)
+    return { credentials, merchants: merchantsRes.data, error: null }
   } catch (e) {
     return {
       credentials: [],
@@ -76,9 +79,9 @@ export async function action({ request }: Route.ActionArgs) {
   const intent = formData.get("intent")
 
   if (intent === "create") {
+    const merchantId = formData.get("merchant_id") as string
     try {
-      await apiClient.post("/psp-credentials", user, {
-        merchant_id: formData.get("merchant_id"),
+      await apiClient.post(`/merchants/${merchantId}/psp-credentials`, user, {
         psp_name: formData.get("psp_name"),
         cybersource_merchant_id: formData.get("cybersource_merchant_id") || undefined,
         cybersource_key_id: formData.get("cybersource_key_id") || undefined,
@@ -96,8 +99,9 @@ export async function action({ request }: Route.ActionArgs) {
   if (intent === "toggle") {
     const id = formData.get("id")
     const is_active = formData.get("is_active") === "true"
+    const merchantId = formData.get("merchant_id") as string
     try {
-      await apiClient.patch(`/psp-credentials/${id}`, user, {
+      await apiClient.patch(`/merchants/${merchantId}/psp-credentials/${id}`, user, {
         is_active: !is_active,
       })
       return { success: true, error: null }
@@ -115,6 +119,7 @@ export async function action({ request }: Route.ActionArgs) {
 export default function PspCredentialsPage() {
   const { credentials, merchants, error } = useLoaderData<typeof loader>()
   const actionData = useActionData<typeof action>()
+  const merchantNameById = new Map(merchants.map((merchant) => [merchant.id, merchant.name]))
 
   return (
     <div className="space-y-6">
@@ -231,7 +236,7 @@ export default function PspCredentialsPage() {
                 credentials.map((c) => (
                   <TableRow key={c.id}>
                     <TableCell className="font-medium">
-                      {c.merchant?.name ?? "—"}
+                      {c.merchant?.name ?? merchantNameById.get(c.merchant_id) ?? "—"}
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">{c.psp_name}</Badge>
@@ -254,14 +259,20 @@ export default function PspCredentialsPage() {
                       {new Date(c.created_at).toLocaleDateString("es")}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Form method="post">
-                        <input type="hidden" name="intent" value="toggle" />
-                        <input type="hidden" name="id" value={c.id} />
-                        <input type="hidden" name="is_active" value={String(c.is_active)} />
-                        <Button variant="ghost" size="sm" type="submit">
-                          {c.is_active ? "Desactivar" : "Activar"}
+                      <div className="flex items-center justify-end gap-2">
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link to={`/psp-credentials/${c.id}/edit`}>Editar</Link>
                         </Button>
-                      </Form>
+                        <Form method="post">
+                          <input type="hidden" name="intent" value="toggle" />
+                          <input type="hidden" name="id" value={c.id} />
+                          <input type="hidden" name="is_active" value={String(c.is_active)} />
+                          <input type="hidden" name="merchant_id" value={c.merchant_id} />
+                          <Button variant="ghost" size="sm" type="submit">
+                            {c.is_active ? "Desactivar" : "Activar"}
+                          </Button>
+                        </Form>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))

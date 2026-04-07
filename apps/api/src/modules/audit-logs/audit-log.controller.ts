@@ -5,14 +5,12 @@ const auditLogService = new AuditLogService();
 
 export class AuditLogController {
   static async findAll(c: AppContext) {
-    const merchant = c.get('merchant');
+    const merchantId = c.req.param('merchantId')!;
 
     const page = parseInt(c.req.query('page') || '1', 10);
     const limit = Math.min(parseInt(c.req.query('limit') || '50', 10), 100);
 
-    const { data, total } = merchant
-      ? await auditLogService.findByMerchant(merchant.id, page, limit)
-      : await auditLogService.findAll(page, limit);
+    const { data, total } = await auditLogService.findByMerchant(merchantId, page, limit);
 
     return c.json({
       data,
