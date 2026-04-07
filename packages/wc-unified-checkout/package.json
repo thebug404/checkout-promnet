@@ -21,6 +21,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vitejs/plugin-basic-ssl": "2.3.0",
     "lit": "3.3.2"
   },
   "devDependencies": {
