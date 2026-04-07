@@ -77,6 +77,7 @@ export class SessionController {
     const body = await c.req.json();
     const merchantId = c.req.param('merchantId')!;
     const apiKey = c.get('apiKey');
+    const authType = c.get('authType');
 
     const createSessionDto = plainToInstance(CreateSessionDto, body);
 
@@ -88,6 +89,31 @@ export class SessionController {
           ...flatten(err.children ?? []),
         ]);
       return c.json({ error: 'Validation failed', details: flatten(validationErrors) }, 400);
+    }
+
+    // Validar targetOrigins contra allowed_origins de la API Key
+    if (authType === 'api_key' && apiKey) {
+      const allowedOrigins = apiKey.allowed_origins ?? [];
+      const targetOrigins = createSessionDto.targetOrigins;
+
+      if (allowedOrigins.length > 0) {
+        const unauthorizedOrigins = targetOrigins.filter(
+          (origin) => !allowedOrigins.includes(origin)
+        );
+
+        if (unauthorizedOrigins.length > 0) {
+          return c.json(
+            {
+              error: 'Forbidden: One or more targetOrigins are not allowed for this API Key',
+              details: {
+                unauthorized_origins: unauthorizedOrigins,
+                allowed_origins: allowedOrigins,
+              },
+            },
+            403
+          );
+        }
+      }
     }
 
     const paymentPayload = buildSessionPayload(createSessionDto);
