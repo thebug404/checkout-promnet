@@ -5,7 +5,7 @@ export class CreateMerchantDto {
   @IsString()
   name!: string;
 
-  @IsNotEmpty({ message: 'ruc is required' })
+  @IsOptional()
   @IsString()
   ruc!: string;
 

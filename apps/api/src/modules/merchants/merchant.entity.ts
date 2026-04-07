@@ -17,8 +17,8 @@ export class MerchantEntity {
   @Column({ type: 'varchar', length: 255 })
   name!: string;
 
-  @Column({ type: 'varchar', length: 20, unique: true })
-  ruc!: string;
+  @Column({ type: 'varchar', length: 50, unique: true, nullable: true })
+  ruc?: string | null;
 
   @Column({ type: 'varchar', length: 5 })
   country_code!: string;

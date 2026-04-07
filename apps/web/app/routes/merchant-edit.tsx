@@ -23,7 +23,6 @@ import {
 interface Merchant {
   id: string
   name: string
-  ruc: string
   country_code: string
   status: string
   created_at: string
@@ -61,7 +60,6 @@ export async function action({ request, params }: Route.ActionArgs) {
   try {
     await apiClient.patch(`/merchants/${merchantId}`, user, {
       name: formData.get("name") || undefined,
-      ruc: formData.get("ruc") || undefined,
       country_code: formData.get("country_code") || undefined,
       status: formData.get("status") || undefined,
     })
@@ -108,11 +106,6 @@ export default function MerchantEditPage() {
               <div className="grid gap-2">
                 <Label htmlFor="name">Nombre</Label>
                 <Input id="name" name="name" defaultValue={merchant.name} required />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="ruc">RUC / Tax ID</Label>
-                <Input id="ruc" name="ruc" defaultValue={merchant.ruc} required />
               </div>
 
               <div className="grid gap-2">

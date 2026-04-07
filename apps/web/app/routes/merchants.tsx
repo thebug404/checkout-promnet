@@ -40,7 +40,6 @@ import {
 interface Merchant {
   id: string
   name: string
-  ruc: string
   country_code: string
   status: string
   created_at: string
@@ -68,7 +67,6 @@ export async function action({ request }: Route.ActionArgs) {
     try {
       await apiClient.post("/merchants", user, {
         name: formData.get("name"),
-        ruc: formData.get("ruc"),
         country_code: formData.get("country_code"),
       })
       return { success: true, error: null }
@@ -133,10 +131,6 @@ export default function MerchantsPage() {
                   <Input id="name" name="name" placeholder="Acme Corp" required />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="ruc">RUC / Tax ID</Label>
-                  <Input id="ruc" name="ruc" placeholder="20100100100" required />
-                </div>
-                <div className="grid gap-2">
                   <Label htmlFor="country_code">País</Label>
                   <Select name="country_code" defaultValue="PE">
                     <SelectTrigger>
@@ -173,7 +167,6 @@ export default function MerchantsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nombre</TableHead>
-                <TableHead>RUC</TableHead>
                 <TableHead>País</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead>Creado</TableHead>
@@ -183,7 +176,7 @@ export default function MerchantsPage() {
             <TableBody>
               {merchants.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                     No hay comercios registrados.
                   </TableCell>
                 </TableRow>
@@ -191,7 +184,6 @@ export default function MerchantsPage() {
                 merchants.map((m) => (
                   <TableRow key={m.id}>
                     <TableCell className="font-medium">{m.name}</TableCell>
-                    <TableCell className="font-mono text-sm">{m.ruc}</TableCell>
                     <TableCell>
                       <Badge variant="outline">{m.country_code}</Badge>
                     </TableCell>

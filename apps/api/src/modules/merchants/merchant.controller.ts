@@ -2,6 +2,7 @@ import type { AppContext } from '../../types.js';
 import { MerchantService } from './merchant.service.js';
 import { CreateMerchantDto, UpdateMerchantDto } from './merchant.dto.js';
 import { validateDto } from '../../shared/utils/validate.js';
+import { randomBytes } from 'node:crypto';
 
 const merchantService = new MerchantService();
 
@@ -29,9 +30,15 @@ export class MerchantController {
 
     const dto = body as CreateMerchantDto;
 
-    const existing = await merchantService.findByRuc(dto.ruc);
-    if (existing) {
-      return c.json({ error: 'Merchant with this RUC already exists' }, 409);
+    // Si no se proporciona RUC, generar un hash único
+    if (!dto.ruc) {
+      dto.ruc = `auto_${randomBytes(16).toString('hex')}`;
+    } else {
+      // Solo verificar duplicados si se proporciona un RUC
+      const existing = await merchantService.findByRuc(dto.ruc);
+      if (existing) {
+        return c.json({ error: 'Merchant with this RUC already exists' }, 409);
+      }
     }
 
     const merchant = await merchantService.create(dto);
