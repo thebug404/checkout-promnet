@@ -54,8 +54,6 @@ async function authenticateJwt(token: string, c: any, next: () => Promise<void>)
     // JWT-authenticated admin users get all permissions
     const allPermissions = await roleService.findAllPermissions();
 
-    console.log("allPermissions:", allPermissions);
-
     c.set('apiKey', null);
     c.set('merchant', null);
     c.set('role', null);
