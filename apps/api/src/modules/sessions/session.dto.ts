@@ -121,7 +121,10 @@ export class CreateSessionDto {
   @IsOptional() @ValidateNested() @Type(() => CompleteMandateDto) completeMandate?: CompleteMandateDto;
 
   @IsOptional()
-  @IsUrl({}, { message: 'callback_url must be a valid URL' })
+  @IsUrl(
+    { require_tld: environments.NODE_ENV === 'production' },
+    { message: 'callback_url must be a valid URL' }
+  )
   callback_url?: string;
 
   @IsOptional() @IsString() clientVersion?: string;

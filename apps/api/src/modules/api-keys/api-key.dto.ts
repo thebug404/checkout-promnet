@@ -13,9 +13,7 @@ export class CreateApiKeyDto {
   @IsOptional()
   @IsArray()
   @IsUrl(
-    {
-      require_tld: environments.NODE_ENV === 'production', // Require TLD in production, allow localhost in development
-    },
+    { require_tld: environments.NODE_ENV === 'production' }, // Require TLD in production, allow localhost in development
     { each: true, message: 'Each entry in allowed_origins must be a valid URL' }
   )
   allowed_origins?: string[];
@@ -37,7 +35,9 @@ export class CreateApiKeyDto {
 export class UpdateApiKeyDto {
   @IsOptional()
   @IsArray()
-  @IsUrl({}, { each: true, message: 'Each entry in allowed_origins must be a valid URL' })
+  @IsUrl(
+    { require_tld: environments.NODE_ENV === 'production' }, // Require TLD in production, allow localhost in development
+    { each: true, message: 'Each entry in allowed_origins must be a valid URL' })
   allowed_origins?: string[];
 
   @IsOptional()
