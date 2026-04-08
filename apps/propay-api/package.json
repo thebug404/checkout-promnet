@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "@types/node": "20.11.17",
+    "dotenv": "16.6.1",
     "tsx": "4.7.1",
     "typescript": "5.8.3"
   }
