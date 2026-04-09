@@ -268,6 +268,7 @@ export class SessionController {
       data: {
         session_id: session.id,
         status,
+        paymentResult,
         cybersource_payment_id: paymentResult.id,
         cybersource_status: paymentResult.status,
         reconciliation_id: paymentResult.reconciliationId,
