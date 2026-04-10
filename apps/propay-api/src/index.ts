@@ -82,8 +82,8 @@ type ProcessPaymentRequest = {
   referenceCode?: string
 }
 
-const ALLOWED_CARD_NETWORKS = ['VISA', 'MASTERCARD', 'AMEX', 'DISCOVER', 'JCB', 'DINERSCLUB']
-const ALLOWED_PAYMENT_TYPES = ['CLICKTOPAY', 'GOOGLEPAY', 'PANENTRY']
+const ALLOWED_CARD_NETWORKS = ['VISA', 'MASTERCARD']
+const ALLOWED_PAYMENT_TYPES = ['CLICKTOPAY', 'GOOGLEPAY', 'APPLEPAY', 'PANENTRY']
 
 if (process.env.NODE_ENV === 'development') {
   app.use('*', cors())
